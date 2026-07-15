@@ -40,7 +40,14 @@ swift run appshot devices fetch "iPhone 17 Pro Max"
 swift run appshot render        # → output/demo/<locale>/<slot>.png, 1320×2868
 ```
 
-To install `appshot` as a standalone command (so it works from any folder, not just this clone): `swift build -c release && sudo cp .build/release/appshot /usr/local/bin/`. The binary is self-contained — running `appshot init` in an empty directory bootstraps a fresh studio (`apps/`, `templates/`, `devices/`).
+To install `appshot` as a standalone command (so it works from any folder, not just this clone):
+
+```bash
+brew install jems19s/tap/appshot
+# or, from a clone: swift build -c release && sudo cp .build/release/appshot /usr/local/bin/
+```
+
+The binary is self-contained — running `appshot init` in an empty directory bootstraps a fresh studio (`apps/`, `templates/`, `devices/`).
 
 ## Commands
 
