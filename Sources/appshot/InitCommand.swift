@@ -1,0 +1,422 @@
+import ArgumentParser
+import Foundation
+
+struct InitCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "init",
+        abstract: "Interactively scaffold apps/<name>/ — device, screenshots, locales, captions, theme.")
+
+    @Option(help: "studio root (default: current directory)")
+    var root: String?
+
+    private struct Draft {
+        var name = ""
+        var deviceID: String?
+        var deviceColor: String?
+        var width = 0, height = 0
+        var folder: String?
+        var files: [String] = []
+        var slots: [AppConfig.Slot] = []
+        var titles: [String] = []
+        var locales: [String] = []
+        var accent = "#4f7df9"
+        var headline = "#181a20"
+        var background: AppConfig.Background?
+    }
+
+    private enum Step {
+        case name, device, color, size, screenshots, captions, locales, accent, headline, background, finished
+    }
+
+    func run() throws {
+        let fm = FileManager.default
+        let root = Studio.root(root)
+        print("appshot init — answers become apps/<name>/config.json; everything is editable later.")
+        print(Prompt.dim + (Prompt.interactive
+            ? "esc goes back a step."
+            : "\"<\" on text prompts and \"0\" on menus goes back a step.") + Prompt.reset + "\n")
+
+        let devicesDir = join(root, "devices")
+        var upstreamNames: [String]?
+        var draft = Draft()
+        var step = Step.name
+        var backing = false
+
+        while step != .finished {
+            switch step {
+            case .name:
+                var name = ""
+                while name.isEmpty {
+                    name = FrameSource.slug(Prompt.text("App name",
+                                                        defaultValue: draft.name.isEmpty ? nil : draft.name) ?? "")
+                }
+                if name != draft.name, fm.fileExists(atPath: join(root, "apps", name, "config.json")) {
+                    guard Prompt.confirm("apps/\(name) already exists — overwrite its config?",
+                                         defaultValue: false) == true else { continue }
+                }
+                draft.name = name
+                step = .device; backing = false
+
+            case .device:
+                if let id = try pickDevice(devicesDir: devicesDir, upstreamNames: &upstreamNames,
+                                           current: draft.deviceID) {
+                    draft.deviceID = id
+                    step = .color; backing = false
+                } else {
+                    step = .name; backing = true
+                }
+
+            case .color:
+                let spec = try loadJSON(DeviceSpec.self,
+                                        at: join(devicesDir, draft.deviceID!, "device.json"),
+                                        what: "device pack")
+                let colorKeys = spec.colors.keys.sorted()
+                if colorKeys.count == 1 {
+                    if backing {
+                        step = .device
+                    } else {
+                        draft.deviceColor = colorKeys[0]
+                        step = .size
+                    }
+                    continue
+                }
+                let defaultIndex = colorKeys.firstIndex(of: spec.default ?? "") ?? 0
+                let ordered = [colorKeys[defaultIndex]] + colorKeys.enumerated()
+                    .filter { $0.offset != defaultIndex }.map(\.element)
+                let initial = draft.deviceColor.flatMap { ordered.firstIndex(of: $0) } ?? 0
+                if let choice = Prompt.select("Device color", options: ordered,
+                                              initial: initial, canGoBack: true) {
+                    draft.deviceColor = ordered[choice]
+                    step = .size; backing = false
+                } else {
+                    step = .device; backing = true
+                }
+
+            case .size:
+                if let (width, height) = pickOutputSize(deviceID: draft.deviceID!,
+                                                        current: draft.width > 0 ? (draft.width, draft.height) : nil) {
+                    draft.width = width; draft.height = height
+                    step = .screenshots; backing = false
+                } else {
+                    step = .color; backing = true
+                }
+
+            case .screenshots:
+                if let (folder, files) = pickScreenshotFolder(defaultFolder: draft.folder) {
+                    if files != draft.files || folder != draft.folder {
+                        draft.files = files
+                        (draft.slots, draft.titles) = makeSlots(files: files)
+                    }
+                    draft.folder = folder
+                    try copyAssets(files: files, from: folder,
+                                   to: join(root, "apps", draft.name, "assets"))
+                    step = .captions; backing = false
+                } else {
+                    step = .size; backing = true
+                }
+
+            case .captions:
+                if !backing {
+                    print(Prompt.dim + "Captions: *word or phrase* renders in the accent color; \\n breaks the line." + Prompt.reset)
+                }
+                var index = backing ? draft.titles.count - 1 : 0
+                while true {
+                    if index == draft.slots.count { step = .locales; backing = false; break }
+                    if index < 0 { step = .screenshots; backing = true; break }
+                    let existing = draft.titles[index]
+                    if let title = Prompt.text("Caption for \(draft.slots[index].name)",
+                                               defaultValue: existing.isEmpty ? nil
+                                                   : existing.replacingOccurrences(of: "\n", with: "\\n"),
+                                               canGoBack: true) {
+                        draft.titles[index] = title.replacingOccurrences(of: "\\n", with: "\n")
+                        index += 1
+                    } else {
+                        index -= 1
+                    }
+                }
+
+            case .locales:
+                if let answer = Prompt.text("Locales (comma-separated)",
+                                            defaultValue: draft.locales.isEmpty ? "en"
+                                                : draft.locales.joined(separator: ", "),
+                                            canGoBack: true) {
+                    let locales = answer.split(separator: ",")
+                        .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                    draft.locales = locales.isEmpty ? ["en"] : locales
+                    step = .accent; backing = false
+                } else {
+                    step = .captions; backing = true
+                }
+
+            case .accent:
+                if let color = pickColor("Accent color (hex)", defaultValue: draft.accent) {
+                    draft.accent = color
+                    step = .headline; backing = false
+                } else {
+                    step = .locales; backing = true
+                }
+
+            case .headline:
+                if let color = pickColor("Headline color (hex)", defaultValue: draft.headline) {
+                    draft.headline = color
+                    step = .background; backing = false
+                } else {
+                    step = .accent; backing = true
+                }
+
+            case .background:
+                if let background = pickBackground(current: draft.background) {
+                    draft.background = background
+                    step = .finished
+                } else {
+                    step = .headline; backing = true
+                }
+
+            case .finished:
+                break
+            }
+        }
+
+        try write(draft: draft, root: root)
+        print("""
+
+        Done. Notes:
+          · System fonts are used by default — point config.json "fonts" at your own files to brand it.
+          · Every locale starts with the \(draft.locales[0]) captions — translate apps/\(draft.name)/captions/<locale>.json.
+          · Device size/position = layout.deviceWidth/deviceTop in config.json (slots can override per shot).
+          · Theme and background live there too — tweak, then re-run render.
+        """)
+        if Prompt.confirm("Render now?") == true {
+            print("\nRendering '\(draft.name)' …")
+            try RenderEngine.renderApp(app: draft.name, root: root, onlyLocales: [], onlySlots: [],
+                                       chromeOverride: nil)
+        } else {
+            print("\nWhen ready: appshot render --app \(draft.name)")
+        }
+    }
+
+    private func write(draft: Draft, root: String) throws {
+        let appDir = join(root, "apps", draft.name)
+        let config = AppConfig(
+            app: draft.name,
+            device: draft.deviceID!,
+            deviceColor: draft.deviceColor,
+            output: .init(width: draft.width, height: draft.height),
+            layout: .init(deviceWidth: Int((Double(draft.width) * 1120 / 1320).rounded()),
+                          deviceTop: Int((Double(draft.height) * 440 / 2868).rounded())),
+            fonts: nil,
+            locales: draft.locales,
+            theme: ["accent": draft.accent, "headlineColor": draft.headline],
+            background: draft.background!,
+            slots: draft.slots)
+        try FileManager.default.ensureDirectory(join(appDir, "captions"))
+        try writeJSON(config, to: join(appDir, "config.json"))
+        print("  ✓ apps/\(draft.name)/config.json")
+        for locale in draft.locales {
+            let captions = Dictionary(uniqueKeysWithValues: zip(draft.slots.map(\.caption), draft.titles))
+                .mapValues { CaptionEntry.fields(["title": $0]) }
+            try writeJSON(captions, to: join(appDir, "captions", "\(locale).json"))
+            print("  ✓ apps/\(draft.name)/captions/\(locale).json")
+        }
+        try EmbeddedTemplate.bootstrap(root: root)
+    }
+
+    private func pickDevice(devicesDir: String, upstreamNames: inout [String]?,
+                            current: String?) throws -> String? {
+        while true {
+            let installed = DevicePackBuilder.installed(devicesDir: devicesDir)
+            if installed.isEmpty {
+                print("No device packs installed yet — fetching one (frames come from fastlane/frameit-frames).")
+                return try fetchFlow(devicesDir: devicesDir, upstreamNames: &upstreamNames)
+            }
+            let options = installed.map { "\($0.id)  (\($0.spec.colors.keys.sorted().joined(separator: ", ")))" }
+                + ["Fetch a different device…"]
+            let initial = installed.firstIndex { $0.id == current } ?? 0
+            guard let choice = Prompt.select("Device", options: options,
+                                             initial: initial, canGoBack: true) else { return nil }
+            if choice < installed.count { return installed[choice].id }
+            if let fetched = try fetchFlow(devicesDir: devicesDir, upstreamNames: &upstreamNames) {
+                return fetched
+            }
+        }
+    }
+
+    private func fetchFlow(devicesDir: String, upstreamNames: inout [String]?) throws -> String? {
+        if upstreamNames == nil {
+            print("Loading the upstream frame list…")
+            upstreamNames = try FrameSource.upstreamNames()
+        }
+        let names = upstreamNames!
+        while true {
+            guard let query = Prompt.text("Device name", defaultValue: "iPhone 17 Pro Max",
+                                          canGoBack: true) else { return nil }
+            let matches = FrameSource.matches(in: names, query: query)
+            if matches.isEmpty {
+                let tokens = query.lowercased().split(separator: " ")
+                let candidates = names.filter { name in
+                    tokens.allSatisfy { name.lowercased().contains($0) }
+                        || name.lowercased().contains(tokens.first ?? "")
+                }.prefix(8)
+                print("No frame matches \"\(query)\"." + (candidates.isEmpty
+                    ? " Try `appshot devices list`."
+                    : " Close names:\n  " + candidates.joined(separator: "\n  ")))
+                continue
+            }
+            let colors = matches.keys.sorted()
+            var chosen = colors
+            if colors.count > 1 {
+                guard let picked = Prompt.multiSelect("Colors to download", options: colors,
+                                                      canGoBack: true) else { continue }
+                chosen = colors.enumerated().filter { picked.contains($0.offset) }.map(\.element)
+            }
+            return try DevicePackBuilder.fetch(query: query, colorFilter: chosen, packID: nil,
+                                               devicesDir: devicesDir) { print($0) }
+        }
+    }
+
+    private func pickOutputSize(deviceID: String, current: (Int, Int)?) -> (Int, Int)? {
+        var options: [(label: String, size: (Int, Int)?)] = []
+        if deviceID.contains("ipad") {
+            options.append(("2048 × 2732 — App Store iPad 13″", (2048, 2732)))
+        } else if deviceID.contains("iphone") {
+            options.append(("1320 × 2868 — App Store iPhone 6.9″", (1320, 2868)))
+        }
+        options.append(("Custom…", nil))
+        while true {
+            let initial = current.flatMap { size in
+                options.firstIndex { $0.size ?? (0, 0) == size }
+            } ?? 0
+            let onlyCustom = options.count == 1
+            let choice: Int
+            if onlyCustom {
+                choice = 0
+            } else {
+                guard let picked = Prompt.select("Output size", options: options.map(\.label),
+                                                 initial: initial, canGoBack: true) else { return nil }
+                choice = picked
+            }
+            if let size = options[choice].size { return size }
+            guard let width = pickNumber("Width (px)", defaultValue: current?.0 ?? 1320) else {
+                if onlyCustom { return nil }
+                continue
+            }
+            guard let height = pickNumber("Height (px)", defaultValue: current?.1 ?? 2868) else {
+                if onlyCustom { return nil }
+                continue
+            }
+            return (width, height)
+        }
+    }
+
+    private func pickScreenshotFolder(defaultFolder: String?) -> (String, [String])? {
+        let fm = FileManager.default
+        while true {
+            guard let answer = Prompt.text("Folder with your screenshots (PNG)",
+                                           defaultValue: defaultFolder ?? ".",
+                                           canGoBack: true) else { return nil }
+            let folder = URL(fileURLWithPath: (answer as NSString).expandingTildeInPath)
+                .standardizedFileURL.path
+            let entries = (try? fm.contentsOfDirectory(atPath: folder)) ?? []
+            let files = entries.filter { $0.lowercased().hasSuffix(".png") && !$0.hasPrefix(".") }.sorted()
+            if files.isEmpty {
+                print("No PNGs in \(folder) — try another folder.")
+                continue
+            }
+            print("Found \(files.count):\n  " + files.joined(separator: "\n  "))
+            if Prompt.confirm("Use these?", canGoBack: true) == true { return (folder, files) }
+        }
+    }
+
+    private func makeSlots(files: [String]) -> ([AppConfig.Slot], [String]) {
+        var slots: [AppConfig.Slot] = []
+        var captionKeys = Set<String>()
+        for (index, file) in files.enumerated() {
+            let stem = FrameSource.slug(String(file.dropLast(4)))
+            var captionKey = stem
+            var suffix = 2
+            while captionKeys.contains(captionKey) {
+                captionKey = "\(stem)-\(suffix)"
+                suffix += 1
+            }
+            captionKeys.insert(captionKey)
+            slots.append(.init(name: String(format: "%02d-", index + 1) + stem,
+                               template: EmbeddedTemplate.defaultName,
+                               screenshot: file, tilt: 0, caption: captionKey))
+        }
+        return (slots, [String](repeating: "", count: files.count))
+    }
+
+    private func copyAssets(files: [String], from folder: String, to assetsDir: String) throws {
+        let fm = FileManager.default
+        try fm.ensureDirectory(assetsDir)
+        for file in files {
+            let destination = join(assetsDir, file)
+            if fm.fileExists(atPath: destination) { try fm.removeItem(atPath: destination) }
+            try fm.copyItem(atPath: join(folder, file), toPath: destination)
+        }
+    }
+
+    private func pickColor(_ label: String, defaultValue: String) -> String? {
+        while true {
+            guard let answer = Prompt.text(label, defaultValue: defaultValue,
+                                           canGoBack: true) else { return nil }
+            if (try? BackgroundRenderer.rgb(answer)) != nil { return answer }
+            print("Expected #rrggbb.")
+        }
+    }
+
+    private func pickNumber(_ label: String, defaultValue: Int) -> Int? {
+        while true {
+            guard let answer = Prompt.text(label, defaultValue: String(defaultValue),
+                                           canGoBack: true) else { return nil }
+            if let number = Int(answer), number > 0 { return number }
+        }
+    }
+
+    private func pickBackground(current: AppConfig.Background?) -> AppConfig.Background? {
+        let labels = [
+            "Mesh gradient (soft default palette — edit colors later in config.json)",
+            "Solid color",
+            "Linear gradient",
+            "Ready-made image from assets/",
+        ]
+        let types = ["mesh", "solid", "linear", "image"]
+        while true {
+            let initial = current.flatMap { types.firstIndex(of: $0.type ?? "mesh") } ?? 0
+            guard let choice = Prompt.select("Background", options: labels,
+                                             initial: initial, canGoBack: true) else { return nil }
+            switch choice {
+            case 1:
+                guard let color = pickColor("Color (hex)",
+                                            defaultValue: current?.color ?? "#f2f4f8") else { continue }
+                return .init(type: "solid", color: color)
+            case 2:
+                guard let answer = Prompt.text("Colors from start to end (comma-separated hex)",
+                                               defaultValue: current?.stops?.joined(separator: ",")
+                                                   ?? "#e8ecf4,#d5dcef",
+                                               canGoBack: true) else { continue }
+                let stops = answer.split(separator: ",")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { (try? BackgroundRenderer.rgb($0)) != nil }
+                guard stops.count >= 2 else {
+                    print("Need at least two valid #rrggbb colors.")
+                    continue
+                }
+                guard let angle = pickNumber("Angle (degrees, 90 = top→bottom)",
+                                             defaultValue: Int(current?.angle ?? 90)) else { continue }
+                return .init(type: "linear", stops: stops, angle: Double(angle))
+            case 3:
+                guard let file = Prompt.text("File name (drop it into assets/ before rendering)",
+                                             defaultValue: current?.file,
+                                             canGoBack: true) else { continue }
+                return .init(type: "image", file: file)
+            default:
+                return .init(type: "mesh", colors: current?.colors ?? [
+                    "#e8ecf4", "#dfe7f7", "#f3f0ea",
+                    "#d5dcef", "#eef0f2", "#e2e6ee",
+                    "#e9e4f2", "#d9e2ef", "#f2f2ea",
+                ])
+            }
+        }
+    }
+}

@@ -1,0 +1,4 @@
+.build/
+output/
+devices/
+.DS_Store

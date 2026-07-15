@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{zoom:3;width:440px;height:956px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#f6f4ec;color:#1c2b22;overflow:hidden}
+.status{display:flex;justify-content:space-between;align-items:center;padding:24px 34px 6px;font-size:16px;font-weight:600}
+.sicons{display:flex;align-items:center;gap:7px}
+.bars{display:flex;align-items:flex-end;gap:1.5px}.bars i{width:3px;background:#1c2b22;border-radius:1px;display:block}
+.batt{width:26px;height:12px;border:1.5px solid rgba(28,43,34,.45);border-radius:4px;padding:1.5px;position:relative}
+.batt i{display:block;height:100%;width:75%;background:#1c2b22;border-radius:2px}
+.batt::after{content:"";position:absolute;right:-4px;top:3.5px;width:2px;height:5px;background:rgba(28,43,34,.45);border-radius:0 2px 2px 0}
+.head{display:flex;justify-content:space-between;align-items:center;padding:22px 26px 0}
+.head .hi{font-size:15px;color:#6f7d72;font-weight:500}
+.head h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#3ba36b,#1e5c3d);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.search{margin:18px 26px 0;background:#fff;border-radius:18px;height:48px;display:flex;align-items:center;gap:10px;padding:0 16px;color:#9aa79d;font-size:15px;box-shadow:0 2px 10px rgba(28,43,34,.05)}
+.mag{width:16px;height:16px;border:2px solid #9aa79d;border-radius:50%;position:relative}
+.mag::after{content:"";position:absolute;width:2px;height:7px;background:#9aa79d;border-radius:1px;transform:rotate(-45deg);right:-4px;bottom:-5px}
+.feature{margin:20px 26px 0;border-radius:26px;padding:24px;background:linear-gradient(135deg,#2e7d54,#173d2a);color:#fff;position:relative;overflow:hidden}
+.feature .chip{display:inline-block;background:rgba(255,255,255,.18);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;letter-spacing:.02em}
+.feature h2{font-size:22px;font-weight:800;line-height:1.2;margin:12px 0 16px;max-width:220px}
+.feature .btn{display:inline-block;background:#fff;color:#1e5c3d;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:700}
+.bigleaf,.bigleaf2{position:absolute;overflow:hidden;background:linear-gradient(135deg,#57b97f,#2e7d54);border-radius:4px 999px 4px 999px}
+.bigleaf{width:150px;height:150px;right:-38px;top:14px;transform:rotate(12deg)}
+.bigleaf2{width:90px;height:90px;right:66px;top:96px;transform:rotate(58deg);opacity:.75}
+.vein{position:absolute;left:50%;top:8%;width:2.5px;height:84%;background:rgba(255,255,255,.35);border-radius:2px;transform:rotate(45deg);transform-origin:top}
+.sect{display:flex;justify-content:space-between;align-items:baseline;margin:26px 26px 0}
+.sect h3{font-size:19px;font-weight:800}.sect span{font-size:13.5px;font-weight:600;color:#2e7d54}
+.rows{margin:12px 26px 0;display:flex;flex-direction:column;gap:12px}
+.row{background:#fff;border-radius:22px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(28,43,34,.05)}
+.thumb{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.leaf{width:26px;height:26px;border-radius:2px 999px 2px 999px;transform:rotate(45deg)}
+.row .info{flex:1;min-width:0}
+.row .name{font-size:16.5px;font-weight:700}
+.row .sub{font-size:13px;color:#6f7d72;margin-top:2px}
+.meter{width:64px}
+.meter .track{height:7px;background:#e7ece4;border-radius:99px;overflow:hidden}
+.meter .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#57b97f,#2e7d54)}
+.meter .pct{font-size:11px;color:#6f7d72;text-align:right;margin-top:4px;font-weight:600}
+.tabs{position:absolute;left:26px;right:26px;bottom:26px;background:#fff;border-radius:26px;height:66px;display:flex;align-items:center;justify-content:space-around;box-shadow:0 10px 30px rgba(28,43,34,.12)}
+.tab{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+.tab.on{background:#dcefe2}
+.dot{width:18px;height:18px;border-radius:6px;background:#c3cdc4}.tab.on .dot{background:#2e7d54;border-radius:2px 999px 2px 999px;transform:rotate(45deg)}
+</style></head><body>
+<div class="status"><div>9:41</div><div class="sicons">
+<span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:10px"></i></span>
+<svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 5.6 8.3a4.1 4.1 0 0 1 5.8 0zM3.1 5.8a7.6 7.6 0 0 1 10.8 0l-1.8 1.8a5.1 5.1 0 0 0-7.2 0zM.5 3.2a11.3 11.3 0 0 1 16 0l-1.8 1.8a8.8 8.8 0 0 0-12.4 0z" fill="#1c2b22"/></svg>
+<span class="batt"><i></i></span></div></div>
+<div class="head"><div><div class="hi">Good morning, June</div><h1>Your greenhouse</h1></div><div class="avatar">JS</div></div>
+<div class="search"><span class="mag"></span>Search 24 plants…</div>
+<div class="feature"><div class="bigleaf"><i class="vein"></i></div><div class="bigleaf2"></div>
+<span class="chip">WATERING DAY</span><h2>6 plants are thirsty today</h2><span class="btn">Start routine</span></div>
+<div class="sect"><h3>Living room</h3><span>See all</span></div>
+<div class="rows">
+<div class="row"><div class="thumb" style="background:#dcefe2"><i class="leaf" style="background:linear-gradient(135deg,#57b97f,#2e7d54)"></i></div><div class="info"><div class="name">Monstera deliciosa</div><div class="sub">Water in 2 days · 250 ml</div></div><div class="meter"><div class="track"><div class="fill" style="width:72%"></div></div><div class="pct">72%</div></div></div>
+<div class="row"><div class="thumb" style="background:#e9ecd8"><i class="leaf" style="background:linear-gradient(135deg,#a5c05b,#6d8f37)"></i></div><div class="info"><div class="name">Ficus lyrata</div><div class="sub">Water today · 400 ml</div></div><div class="meter"><div class="track"><div class="fill" style="width:18%;background:linear-gradient(90deg,#e8b34b,#d98a2b)"></div></div><div class="pct">18%</div></div></div>
+<div class="row"><div class="thumb" style="background:#ddeae8"><i class="leaf" style="background:linear-gradient(135deg,#5bb9a8,#2e7d70)"></i></div><div class="info"><div class="name">Calathea orbifolia</div><div class="sub">Misted this morning</div></div><div class="meter"><div class="track"><div class="fill" style="width:91%"></div></div><div class="pct">91%</div></div></div>
+</div>
+<div class="tabs"><div class="tab on"><span class="dot"></span></div><div class="tab"><span class="dot" style="border-radius:50%"></span></div><div class="tab"><span class="dot" style="border-radius:4px"></span></div></div>
+</body></html>

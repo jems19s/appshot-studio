@@ -1,0 +1,26 @@
+{
+  "app": "demo",
+  "device": "iphone-17-pro-max",
+  "deviceColor": "silver",
+  "output": { "width": 1320, "height": 2868 },
+  "layout": { "deviceWidth": 1120, "deviceTop": 440 },
+  "locales": ["en", "de"],
+  "theme": {
+    "accent": "#2e7d54",
+    "headlineColor": "#1c2b22",
+    "subtitleColor": "#57685c",
+    "deviceShadow": "0 56px 90px rgba(18,48,31,.38)"
+  },
+  "background": {
+    "type": "mesh",
+    "colors": [
+      "#eef2e4", "#d5ead9", "#f6f1df",
+      "#c9e3cf", "#eef0e2", "#d9ead9",
+      "#e4eed6", "#cfe6cb", "#f2f4e6"
+    ]
+  },
+  "slots": [
+    { "name": "01-home", "template": "caption-top", "screenshot": "screen-home.png", "tilt": 0, "caption": "home" },
+    { "name": "02-care", "template": "caption-bottom", "screenshot": "screen-care.png", "tilt": -6, "caption": "care", "deviceWidth": 1040, "deviceTop": 130 }
+  ]
+}

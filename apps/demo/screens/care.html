@@ -1,0 +1,64 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{zoom:3;width:440px;height:956px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#f6f4ec;color:#1c2b22;overflow:hidden}
+.hero{position:relative;height:400px;background:linear-gradient(160deg,#3d9468 0%,#1e5c3d 55%,#12301f 100%);overflow:hidden}
+.status{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:24px 34px 6px;font-size:16px;font-weight:600;color:#fff}
+.sicons{display:flex;align-items:center;gap:7px}
+.bars{display:flex;align-items:flex-end;gap:1.5px}.bars i{width:3px;background:#fff;border-radius:1px;display:block}
+.batt{width:26px;height:12px;border:1.5px solid rgba(255,255,255,.5);border-radius:4px;padding:1.5px;position:relative}
+.batt i{display:block;height:100%;width:75%;background:#fff;border-radius:2px}
+.batt::after{content:"";position:absolute;right:-4px;top:3.5px;width:2px;height:5px;background:rgba(255,255,255,.5);border-radius:0 2px 2px 0}
+.nav{position:relative;z-index:3;display:flex;justify-content:space-between;padding:10px 22px 0}
+.circ{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center}
+.back{width:10px;height:10px;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(45deg);margin-left:4px}
+.heart{width:10px;height:10px;background:#fff;transform:rotate(45deg);position:relative;margin:-3px 0 0 -1px}
+.heart::before,.heart::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#fff}
+.heart::before{left:-5px;top:0}
+.heart::after{top:-5px;left:0}
+.leaf{position:absolute;overflow:hidden;background:linear-gradient(135deg,#6cc691,#2e7d54);border-radius:6px 999px 6px 999px;box-shadow:0 18px 40px rgba(10,26,17,.35)}
+.l1{width:210px;height:210px;left:118px;top:128px;transform:rotate(38deg)}
+.l2{width:130px;height:130px;left:52px;top:200px;transform:rotate(80deg);opacity:.85}
+.l3{width:110px;height:110px;left:274px;top:112px;transform:rotate(8deg);opacity:.9}
+.vein{position:absolute;left:50%;top:7%;width:3px;height:86%;background:rgba(255,255,255,.35);border-radius:2px;transform:rotate(45deg);transform-origin:top}
+.sheet{position:relative;margin-top:-34px;background:#f6f4ec;border-radius:34px 34px 0 0;padding:26px 26px 0;height:590px}
+.grab{width:44px;height:5px;border-radius:99px;background:#d8ddd3;margin:0 auto 18px}
+h1{font-size:27px;font-weight:800;letter-spacing:-.02em}
+.where{font-size:14px;color:#6f7d72;margin-top:4px;font-weight:500}
+.chips{display:flex;gap:10px;margin-top:18px}
+.chip{flex:1;background:#fff;border-radius:18px;padding:12px 10px;text-align:center;box-shadow:0 2px 10px rgba(28,43,34,.05)}
+.chip .v{font-size:15.5px;font-weight:700}.chip .k{font-size:11.5px;color:#6f7d72;margin-top:3px;font-weight:600;letter-spacing:.02em}
+.chip .ic{width:22px;height:22px;border-radius:8px;margin:0 auto 7px;display:flex;align-items:center;justify-content:center}
+.drop{width:11px;height:11px;background:#3b82c4;border-radius:50% 50% 50% 0;transform:rotate(-45deg)}
+.sun{width:12px;height:12px;background:#e8b34b;border-radius:50%;box-shadow:0 0 0 2.5px rgba(232,179,75,.35)}
+.temp{width:6px;height:13px;background:#c96b5d;border-radius:99px}
+.sect{font-size:18px;font-weight:800;margin:24px 0 12px}
+.task{background:#fff;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:13px;box-shadow:0 2px 10px rgba(28,43,34,.05);margin-bottom:10px}
+.tick{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tick.done{background:#2e7d54}.tick.todo{border:2px solid #d8ddd3}
+.tick.done i{width:9px;height:5px;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg);margin-bottom:2px}
+.task .t{flex:1}.task .n{font-size:15.5px;font-weight:700}.task .d{font-size:12.5px;color:#6f7d72;margin-top:2px}
+.task .when{font-size:12.5px;font-weight:700;color:#2e7d54}
+.cta{position:absolute;left:26px;right:26px;bottom:26px;background:linear-gradient(135deg,#2e7d54,#1e5c3d);color:#fff;border-radius:22px;height:58px;display:flex;align-items:center;justify-content:center;font-size:16.5px;font-weight:800;box-shadow:0 12px 26px rgba(30,92,61,.35)}
+</style></head><body>
+<div class="hero">
+<div class="status"><div>9:41</div><div class="sicons">
+<span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:10px"></i></span>
+<svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.2 5.6 8.3a4.1 4.1 0 0 1 5.8 0zM3.1 5.8a7.6 7.6 0 0 1 10.8 0l-1.8 1.8a5.1 5.1 0 0 0-7.2 0zM.5 3.2a11.3 11.3 0 0 1 16 0l-1.8 1.8a8.8 8.8 0 0 0-12.4 0z" fill="#fff"/></svg>
+<span class="batt"><i></i></span></div></div>
+<div class="nav"><div class="circ"><span class="back"></span></div><div class="circ"><span class="heart"></span></div></div>
+<div class="leaf l2"></div><div class="leaf l3"><i class="vein"></i></div><div class="leaf l1"><i class="vein"></i></div>
+</div>
+<div class="sheet"><div class="grab"></div>
+<h1>Monstera deliciosa</h1><div class="where">Living room · doing great for 2 years</div>
+<div class="chips">
+<div class="chip"><div class="ic" style="background:#e3edf7"><span class="drop"></span></div><div class="v">6 days</div><div class="k">WATER</div></div>
+<div class="chip"><div class="ic" style="background:#f7efdc"><span class="sun"></span></div><div class="v">Bright</div><div class="k">INDIRECT</div></div>
+<div class="chip"><div class="ic" style="background:#f5e4e0"><span class="temp"></span></div><div class="v">22°C</div><div class="k">COMFORT</div></div>
+</div>
+<div class="sect">This week</div>
+<div class="task"><div class="tick done"><i></i></div><div class="t"><div class="n">Water 250 ml</div><div class="d">Soil was dry two knuckles deep</div></div><div class="when">Mon</div></div>
+<div class="task"><div class="tick todo"></div><div class="t"><div class="n">Wipe the leaves</div><div class="d">Dust blocks the light</div></div><div class="when">Thu</div></div>
+<div class="task"><div class="tick todo"></div><div class="t"><div class="n">Rotate the pot</div><div class="d">Quarter turn toward the window</div></div><div class="when">Sun</div></div>
+<div class="cta">Mark as watered</div>
+</div>
+</body></html>

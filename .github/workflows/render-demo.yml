@@ -1,0 +1,19 @@
+name: render demo
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift build
+      - run: swift run appshot devices fetch "iPhone 17 Pro Max" --colors silver
+      - run: swift run appshot render --app demo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-screenshots
+          path: output/demo
