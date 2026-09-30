@@ -8,7 +8,7 @@ struct Appshot: ParsableCommand {
         abstract: "Config-driven App Store screenshot renderer.",
         discussion: "Frames real app screenshots inside device bezels with localized captions "
             + "over generated backgrounds — HTML/CSS layouts rasterized by headless Chrome.",
-        version: "1.0.0",
+        version: "1.1.0",
         subcommands: [InitCommand.self, RenderCommand.self, DevicesCommand.self])
 }
 
@@ -17,8 +17,8 @@ struct RenderCommand: ParsableCommand {
         commandName: "render",
         abstract: "Render App Store screenshots for an app in apps/<app>/.")
 
-    @Option(help: "app folder under apps/")
-    var app: String = "demo"
+    @Option(help: "app folder under apps/ (default: the only app there)")
+    var app: String?
 
     @Option(name: .customLong("locale"), help: "render only this locale (repeatable)")
     var locales: [String] = []
@@ -33,8 +33,10 @@ struct RenderCommand: ParsableCommand {
     var root: String?
 
     func run() throws {
-        print("Rendering '\(app)' …")
-        try RenderEngine.renderApp(app: app, root: Studio.root(root),
+        let studioRoot = Studio.root(root)
+        let appName = try app ?? Studio.onlyApp(root: studioRoot)
+        print("Rendering '\(appName)' …")
+        try RenderEngine.renderApp(app: appName, root: studioRoot,
                                    onlyLocales: locales, onlySlots: slots, chromeOverride: chrome)
     }
 }
@@ -97,7 +99,8 @@ struct DevicesCommand: ParsableCommand {
         func run() throws {
             let filter = colors?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             _ = try DevicePackBuilder.fetch(query: device, colorFilter: filter, packID: id,
-                                            devicesDir: join(Studio.root(root), "devices")) { print($0) }
+                                            devicesDir: join(Studio.root(root), "devices"),
+                                            upstreamNames: FrameSource.upstreamNames()) { print($0) }
         }
     }
 }

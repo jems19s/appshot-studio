@@ -250,19 +250,14 @@ struct InitCommand: ParsableCommand {
         while true {
             guard let query = Prompt.text("Device name", defaultValue: "iPhone 17 Pro Max",
                                           canGoBack: true) else { return nil }
-            let matches = FrameSource.matches(in: names, query: query)
-            if matches.isEmpty {
-                let tokens = query.lowercased().split(separator: " ")
-                let candidates = names.filter { name in
-                    tokens.allSatisfy { name.lowercased().contains($0) }
-                        || name.lowercased().contains(tokens.first ?? "")
-                }.prefix(8)
-                print("No frame matches \"\(query)\"." + (candidates.isEmpty
-                    ? " Try `appshot devices list`."
-                    : " Close names:\n  " + candidates.joined(separator: "\n  ")))
+            let framesByColor: [String: String]
+            do {
+                framesByColor = try FrameSource.framesByColor(for: query, in: names)
+            } catch {
+                print(error)
                 continue
             }
-            let colors = matches.keys.sorted()
+            let colors = framesByColor.keys.sorted()
             var chosen = colors
             if colors.count > 1 {
                 guard let picked = Prompt.multiSelect("Colors to download", options: colors,
@@ -270,7 +265,7 @@ struct InitCommand: ParsableCommand {
                 chosen = colors.enumerated().filter { picked.contains($0.offset) }.map(\.element)
             }
             return try DevicePackBuilder.fetch(query: query, colorFilter: chosen, packID: nil,
-                                               devicesDir: devicesDir) { print($0) }
+                                               devicesDir: devicesDir, upstreamNames: names) { print($0) }
         }
     }
 
@@ -296,11 +291,13 @@ struct InitCommand: ParsableCommand {
                 choice = picked
             }
             if let size = options[choice].size { return size }
-            guard let width = pickNumber("Width (px)", defaultValue: current?.0 ?? 1320) else {
+            guard let width = pickNumber("Width (px)", defaultValue: current?.0 ?? 1320,
+                                         rule: .pixelSize) else {
                 if onlyCustom { return nil }
                 continue
             }
-            guard let height = pickNumber("Height (px)", defaultValue: current?.1 ?? 2868) else {
+            guard let height = pickNumber("Height (px)", defaultValue: current?.1 ?? 2868,
+                                          rule: .pixelSize) else {
                 if onlyCustom { return nil }
                 continue
             }
@@ -365,11 +362,15 @@ struct InitCommand: ParsableCommand {
         }
     }
 
-    private func pickNumber(_ label: String, defaultValue: Int) -> Int? {
+    private func pickNumber(_ label: String, defaultValue: Int, rule: NumberRule) -> Int? {
         while true {
             guard let answer = Prompt.text(label, defaultValue: String(defaultValue),
                                            canGoBack: true) else { return nil }
-            if let number = Int(answer), number > 0 { return number }
+            do {
+                return try rule.validated(answer)
+            } catch {
+                print(error)
+            }
         }
     }
 
@@ -403,7 +404,8 @@ struct InitCommand: ParsableCommand {
                     continue
                 }
                 guard let angle = pickNumber("Angle (degrees, 90 = top→bottom)",
-                                             defaultValue: Int(current?.angle ?? 90)) else { continue }
+                                             defaultValue: Int(current?.angle ?? 90),
+                                             rule: .gradientAngle) else { continue }
                 return .init(type: "linear", stops: stops, angle: Double(angle))
             case 3:
                 guard let file = Prompt.text("File name (drop it into assets/ before rendering)",
@@ -418,5 +420,21 @@ struct InitCommand: ParsableCommand {
                 ])
             }
         }
+    }
+}
+
+struct NumberRule {
+    static let pixelSize = NumberRule(minimum: 1, maximum: nil)
+    static let gradientAngle = NumberRule(minimum: -360, maximum: 360)
+
+    let minimum: Int
+    let maximum: Int?
+
+    func validated(_ answer: String) throws -> Int {
+        guard let number = Int(answer), number >= minimum, number <= (maximum ?? number) else {
+            throw AppshotError(maximum.map { "Expected a whole number from \(minimum) to \($0)." }
+                ?? "Expected a whole number of \(minimum) or more.")
+        }
+        return number
     }
 }

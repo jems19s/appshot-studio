@@ -1,0 +1,280 @@
+Apple MacBook Air Gold
+Apple MacBook Air Silver
+Apple MacBook Air Space Gray
+Apple MacBook Pro 13 Silver
+Apple MacBook Pro 13 Space Gray
+Apple MacBook Pro 16 Silver
+Apple MacBook Pro 16 Space Gray
+Apple iPad 10.2 Gold
+Apple iPad 10.2 Silver
+Apple iPad 10.2 Space Gray
+Apple iPad Air (2019) 2 Gold
+Apple iPad Air (2019) 2 Silver
+Apple iPad Air (2019) 2 Space Gray
+Apple iPad Air (2019) 2020 Green Portrait
+Apple iPad Air (2019) 2020 Rose Gold Portrait
+Apple iPad Air (2019) 2020 Silver Portrait
+Apple iPad Air (2019) 2020 Sky Blue Portrait
+Apple iPad Air (2019) 2020 Space Gray Portrait
+Apple iPad Mini (2019) Gold
+Apple iPad Mini (2019) Silver
+Apple iPad Mini (2019) Space Gray
+Apple iPad Pro (11-inch) Silver
+Apple iPad Pro (11-inch) Space Gray
+Apple iPad Pro (12.9-inch) (4th generation) Silver
+Apple iPad Pro (12.9-inch) (4th generation) Space Gray
+Apple iPad Pro Gold
+Apple iPad Pro Silver
+Apple iPad Pro Space Gray
+Apple iPhone 11 Black
+Apple iPhone 11 Green
+Apple iPhone 11 Pro Gold
+Apple iPhone 11 Pro Max Gold
+Apple iPhone 11 Pro Max Midnight Green
+Apple iPhone 11 Pro Max Silver
+Apple iPhone 11 Pro Max Space Gray
+Apple iPhone 11 Pro Midnight Green
+Apple iPhone 11 Pro Silver
+Apple iPhone 11 Pro Space Gray
+Apple iPhone 11 Purple
+Apple iPhone 11 Red
+Apple iPhone 11 White
+Apple iPhone 11 Yellow
+Apple iPhone 12 Black
+Apple iPhone 12 Blue
+Apple iPhone 12 Green
+Apple iPhone 12 Mini Black
+Apple iPhone 12 Mini Blue
+Apple iPhone 12 Mini Green
+Apple iPhone 12 Mini Red
+Apple iPhone 12 Mini White
+Apple iPhone 12 Pro Gold
+Apple iPhone 12 Pro Graphite
+Apple iPhone 12 Pro Max Gold
+Apple iPhone 12 Pro Max Graphite
+Apple iPhone 12 Pro Max Pacific Blue
+Apple iPhone 12 Pro Max Silver
+Apple iPhone 12 Pro Pacific Blue
+Apple iPhone 12 Pro Silver
+Apple iPhone 12 Red
+Apple iPhone 12 White
+Apple iPhone 13 Blue
+Apple iPhone 13 Midnight
+Apple iPhone 13 Mini Blue
+Apple iPhone 13 Mini Midnight
+Apple iPhone 13 Mini Pink
+Apple iPhone 13 Mini Red
+Apple iPhone 13 Mini Starlight
+Apple iPhone 13 Pink
+Apple iPhone 13 Pro Gold
+Apple iPhone 13 Pro Graphite
+Apple iPhone 13 Pro Max Gold
+Apple iPhone 13 Pro Max Graphite
+Apple iPhone 13 Pro Max Sierra Blue
+Apple iPhone 13 Pro Max Silver
+Apple iPhone 13 Pro Sierra Blue
+Apple iPhone 13 Pro Silver
+Apple iPhone 13 Red
+Apple iPhone 13 Starlight
+Apple iPhone 14 Blue
+Apple iPhone 14 Midnight
+Apple iPhone 14 Plus Blue
+Apple iPhone 14 Plus Midnight
+Apple iPhone 14 Plus Purple
+Apple iPhone 14 Plus Red
+Apple iPhone 14 Plus Starlight
+Apple iPhone 14 Pro Black
+Apple iPhone 14 Pro Gold
+Apple iPhone 14 Pro Max Black
+Apple iPhone 14 Pro Max Gold
+Apple iPhone 14 Pro Max Purple
+Apple iPhone 14 Pro Max Silver
+Apple iPhone 14 Pro Purple
+Apple iPhone 14 Pro Silver
+Apple iPhone 14 Purple
+Apple iPhone 14 Red
+Apple iPhone 14 Starlight
+Apple iPhone 16 Black
+Apple iPhone 16 Pink
+Apple iPhone 16 Plus Black
+Apple iPhone 16 Plus Pink
+Apple iPhone 16 Plus Teal
+Apple iPhone 16 Plus Ultramarine
+Apple iPhone 16 Plus White
+Apple iPhone 16 Pro Black Titanium
+Apple iPhone 16 Pro Desert Titanium
+Apple iPhone 16 Pro Max Black Titanium
+Apple iPhone 16 Pro Max Desert Titanium
+Apple iPhone 16 Pro Max Natural Titanium
+Apple iPhone 16 Pro Max White Titanium
+Apple iPhone 16 Pro Natural Titanium
+Apple iPhone 16 Pro White Titanium
+Apple iPhone 16 Teal
+Apple iPhone 16 Ultramarine
+Apple iPhone 16 White
+Apple iPhone 17 Black
+Apple iPhone 17 Lavender
+Apple iPhone 17 Mist Blue
+Apple iPhone 17 Pro Cosmic Orange
+Apple iPhone 17 Pro Deep Blue
+Apple iPhone 17 Pro Max Cosmic Orange
+Apple iPhone 17 Pro Max Deep Blue
+Apple iPhone 17 Pro Max Silver
+Apple iPhone 17 Pro Silver
+Apple iPhone 17 Sage
+Apple iPhone 17 White
+Apple iPhone 5c Blue
+Apple iPhone 5c Green
+Apple iPhone 5c Red
+Apple iPhone 5c White
+Apple iPhone 5c Yellow
+Apple iPhone 5s Gold
+Apple iPhone 5s Silver
+Apple iPhone 5s Space Gray
+Apple iPhone 6s Gold
+Apple iPhone 6s Plus Gold
+Apple iPhone 6s Plus Rose Gold
+Apple iPhone 6s Plus Silver
+Apple iPhone 6s Plus Space Gray
+Apple iPhone 6s Rose Gold
+Apple iPhone 6s Silver
+Apple iPhone 6s Space Gray
+Apple iPhone 7 Gold
+Apple iPhone 7 Jet Black
+Apple iPhone 7 Matte Black
+Apple iPhone 7 Plus Gold
+Apple iPhone 7 Plus Jet Black
+Apple iPhone 7 Plus Matte Black
+Apple iPhone 7 Plus Rose Gold
+Apple iPhone 7 Plus Silver
+Apple iPhone 7 Rose Gold
+Apple iPhone 7 Silver
+Apple iPhone 8 Gold
+Apple iPhone 8 Plus Gold
+Apple iPhone 8 Plus Silver
+Apple iPhone 8 Plus Space Gray
+Apple iPhone 8 Silver
+Apple iPhone 8 Space Gray
+Apple iPhone SE Black
+Apple iPhone SE Red
+Apple iPhone SE White
+Apple iPhone X Silver
+Apple iPhone X Space Gray
+Apple iPhone XR Blue
+Apple iPhone XR Coral
+Apple iPhone XR Red
+Apple iPhone XR Silver
+Apple iPhone XR Space Gray
+Apple iPhone XR Yellow
+Apple iPhone XS Gold
+Apple iPhone XS Max Gold
+Apple iPhone XS Max Silver
+Apple iPhone XS Max Space Gray
+Apple iPhone XS Silver
+Apple iPhone XS Space Gray
+Apple-MacBook-Gold
+Apple-MacBook-Space-Gray
+Google Pixel 2 Clearly White
+Google Pixel 2 Just Black
+Google Pixel 2 Kinda Blue
+Google Pixel 2 XL Black and White
+Google Pixel 2 XL Just Black
+Google Pixel 3 Clearly White
+Google Pixel 3 Just Black
+Google Pixel 3 Not Pink
+Google Pixel 3 XL Clearly White
+Google Pixel 3 XL Just Black
+Google Pixel 3 XL Not Pink
+Google Pixel 4 Clearly White
+Google Pixel 4 Just Black
+Google Pixel 4 Oh So Orange
+Google Pixel 4 XL Clearly White
+Google Pixel 4 XL Just Black
+Google Pixel 4 XL Oh So Orange
+Google Pixel 5 Just Black
+Google Pixel 5 Sorta Sage
+Google Pixel Quite Black
+Google Pixel Really Blue
+Google Pixel Slate
+Google Pixel Very Silver
+HTC One A9 Black
+HTC One A9 White
+HTC One M8 Black
+HTC One M8 Gold
+HTC One M8 Silver
+Huawei P8 Black
+Huawei P8 White
+Motorola Moto E Black
+Motorola Moto E White
+Motorola Moto G
+Nexus 4
+Nexus 5x
+Nexus 6P
+Nexus 9
+Samsung Galaxy Grand Prime Black
+Samsung Galaxy Grand Prime Gold
+Samsung Galaxy Grand Prime White
+Samsung Galaxy Note 10 Aura Black
+Samsung Galaxy Note 10 Aura Glow
+Samsung Galaxy Note 10 Aura Pink
+Samsung Galaxy Note 10 Aura Red
+Samsung Galaxy Note 10 Aura White
+Samsung Galaxy Note 10+ Aura Black
+Samsung Galaxy Note 10+ Aura Blue
+Samsung Galaxy Note 10+ Aura Glow
+Samsung Galaxy Note 10+ Aura White
+Samsung Galaxy Note 5 Black
+Samsung Galaxy Note 5 Gold
+Samsung Galaxy Note 5 Pink
+Samsung Galaxy Note 5 Silver Titanium
+Samsung Galaxy Note 5 White
+Samsung Galaxy S Duos
+Samsung Galaxy S10 Flamingo Pink
+Samsung Galaxy S10 Prism Black
+Samsung Galaxy S10 Prism Blue
+Samsung Galaxy S10 Prism Green
+Samsung Galaxy S10 Prism White
+Samsung Galaxy S10+ Ceramic White
+Samsung Galaxy S10+ Flamingo Pink
+Samsung Galaxy S10+ Prism Black
+Samsung Galaxy S10+ Prism Blue
+Samsung Galaxy S10+ Prism Green
+Samsung Galaxy S10+ Prism White
+Samsung Galaxy S20 Cloud Blue
+Samsung Galaxy S20 Cloud Pink
+Samsung Galaxy S20 Cosmic Gray
+Samsung Galaxy S20 Ultra Cosmic Black
+Samsung Galaxy S20 Ultra Cosmic Gray
+Samsung Galaxy S20+ Cloud Blue
+Samsung Galaxy S20+ Cosmic Black
+Samsung Galaxy S20+ Cosmic Gray
+Samsung Galaxy S21 5G Black
+Samsung Galaxy S21 5G Pink
+Samsung Galaxy S21 5G Violet
+Samsung Galaxy S21 5G White
+Samsung Galaxy S21 Ultra 5G Black
+Samsung Galaxy S21 Ultra 5G Silver
+Samsung Galaxy S21+ 5G Black
+Samsung Galaxy S21+ 5G Silver
+Samsung Galaxy S21+ 5G Violet
+Samsung Galaxy S3
+Samsung Galaxy S5 Black
+Samsung Galaxy S5 White
+Samsung Galaxy S7 Black
+Samsung Galaxy S7 Gold
+Samsung Galaxy S7 Silver
+Samsung Galaxy S7 White
+Samsung Galaxy S8 Arctic Silver
+Samsung Galaxy S8 Coral Blue
+Samsung Galaxy S8 Maple Gold
+Samsung Galaxy S8 Midnight Black
+Samsung Galaxy S8 Orchid Gray
+Samsung Galaxy S9 Burgundy Red
+Samsung Galaxy S9 Coral Blue
+Samsung Galaxy S9 Lilac Purple
+Samsung Galaxy S9 Midnight Black
+Samsung Galaxy S9 Sunrise Gold
+Samsung Galaxy S9 Titanium Gray
+Surface Pro X Black
+Surface Pro X Silver
+Xiaomi Mi Mix Alpha

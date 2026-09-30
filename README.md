@@ -16,13 +16,14 @@ Everything that makes your shots *yours* — device, fonts, colors, background, 
 
 ## Requirements
 
-- Swift 5.10+ (Xcode 15+ on macOS; works on Linux too)
+- macOS 13 or later
 - Google Chrome or any Chromium (auto-detected; override with `--chrome PATH` or `$CHROME`)
+- Swift 5.10+ (Xcode 15.3+) — only to run from a clone or build from source; the Homebrew install needs neither
 
 ## Quick start
 
 ```bash
-git clone https://github.com/mzhelezniakov/appshot-studio && cd appshot-studio
+git clone https://github.com/jems19s/appshot-studio && cd appshot-studio
 swift run appshot init
 ```
 
@@ -47,14 +48,14 @@ brew install jems19s/tap/appshot
 # or, from a clone: swift build -c release && sudo cp .build/release/appshot /usr/local/bin/
 ```
 
-The binary is self-contained — running `appshot init` in an empty directory bootstraps a fresh studio (`apps/`, `templates/`, `devices/`).
+Homebrew installs the prebuilt universal binary (Apple silicon and Intel) from the GitHub release — no Xcode needed. The binary is self-contained — running `appshot init` in an empty directory bootstraps a fresh studio (`apps/`, `templates/`, `devices/`), and a plain `appshot render` then renders that app; `--app` is only needed once `apps/` holds more than one.
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
 | `appshot init` | interactive wizard — scaffolds `apps/<name>/` (config, captions, assets) |
-| `appshot render` | renders `apps/<app>/` → `output/<app>/<locale>/<slot>.png`; `--app`, repeatable `--locale`/`--slot`, `--chrome`, `--root` |
+| `appshot render` | renders `apps/<app>/` → `output/<app>/<locale>/<slot>.png`; `--app` (optional when `apps/` holds one app), repeatable `--locale`/`--slot`, `--chrome`, `--root` |
 | `appshot devices` | installed packs; `devices list` = every frame upstream; `devices fetch "<name>"` downloads + measures a pack (`--colors`, `--id`) |
 
 All commands take `--root` (defaults to the current directory) — the folder holding `apps/`, `templates/`, `devices/`, `output/`.
@@ -97,6 +98,7 @@ accent #4f7df9 · headlineColor #181a20 · captionTop 150px · captionBottom 150
 captionPadding 0 90px · captionSize 108px · captionWeight 800 · captionLineHeight 1.05
 captionLetterSpacing -0.03em · subtitleSize 46px · subtitleWeight 600
 subtitleColor #4b5563 · deviceShadow 0 56px 90px rgba(10,12,24,.4)
+captionFit none · captionMinScale 70% · captionFitGap 40px   (see Captions › Auto-fit)
 ```
 
 Any key you set in `theme` overrides the default; any extra key you invent is injected too, so a template can use `{{THEME.whatever}}`.
@@ -119,6 +121,25 @@ Any key you set in `theme` overrides the default; any extra key you invent is in
 
 `*…*` wraps the accent span (colored `THEME.accent`), `\n` breaks the line. A plain string is shorthand for `{"title": …}`. Both shipped templates render an optional **`subtitle`** under the title (styled by the `subtitle*` theme keys); leave it out and no space is reserved. Every field is injected as `{{cap.<key>}}` and unused ones are stripped — adding yet another text field to your layout is a template edit plus the localized words, never a tool change.
 
+### Auto-fit
+
+A caption that fits in English can run into the device in German. Turn on auto-fit and every locale × slot is checked on its own:
+
+```json
+"theme": { "captionFit": "shrink" }
+```
+
+When a caption comes closer than `captionFitGap` (40px) to the device — tilted devices included — title and subtitle shrink together, re-wrapping as they go, until it clears; captions that already fit are left untouched. They never go below `captionMinScale` (70%) of their themed size: a caption that still collides there is rendered at that floor, and `render` prints a warning naming the app, locale and slot. Auto-fit is off by default.
+
+<p>
+  <img src="docs/caption-fit-before.png" width="49%" alt="German caption running into the device with auto-fit off">
+  <img src="docs/caption-fit-after.png" width="49%" alt="The same caption shrunk to 87% and re-wrapped onto two lines with auto-fit on">
+</p>
+
+*The demo's German home shot with auto-fit off and on: the caption drops to 87% and re-wraps onto two lines; nothing else moves.*
+
+Auto-fit is a short script at the end of both shipped templates, which a custom template can copy. Studios bootstrapped by appshot 1.0 keep their older `templates/caption-*.html` without it — `render` warns about them; replace them with the current files from this repository's `templates/`.
+
 ## Localization
 
 - One `captions/<locale>.json` per locale (`init` scaffolds them all from your primary locale).
@@ -132,6 +153,8 @@ swift run appshot devices                                  # what's installed
 swift run appshot devices list                             # every frame upstream
 swift run appshot devices fetch "iPad Pro (11-inch)" --colors silver
 ```
+
+`fetch` matches whole words and takes only that model's colors — `"iPhone 17"` leaves out the 17 Pro and 17 Pro Max. A name that matches nothing, or several devices, lists the candidates instead. The pack lands in `devices/` only once it is complete.
 
 Frames are downloaded from [fastlane/frameit-frames](https://github.com/fastlane/frameit-frames) — Apple's official marketing product images. The screen cutout is measured automatically (the alpha channel is flood-filled from the canvas corners; the transparent region not reachable from outside is the screen hole) and written to `device.json`, together with `hole-mask.png` — the exact hole silhouette used to clip your screenshot to the bezel's rounded corners.
 
@@ -159,7 +182,7 @@ Set `output` to what the store requires — e.g. 1320×2868 for the current iPho
 
 ## CI
 
-`.github/workflows/render-demo.yml` builds the tool, fetches a device pack and renders the demo on every push (GitHub's macOS runners ship Xcode and Chrome). On your own Linux runner, install Chrome and — if it runs as root or in Docker — add `CHROME_FLAGS="--no-sandbox"`.
+`.github/workflows/render-demo.yml` builds the tool, runs the unit tests, fetches a device pack and renders the demo on every push (GitHub's macOS runners ship Xcode and Chrome). Run the tests locally with `swift test` (Xcode 16+). Extra Chrome switches go in `$CHROME_FLAGS`.
 
 ## Troubleshooting
 

@@ -16,5 +16,13 @@ let package = Package(
                 .product(name: "PNG", package: "swift-png"),
             ]
         ),
+        .testTarget(
+            name: "appshotTests",
+            dependencies: [
+                "appshot",
+                .product(name: "PNG", package: "swift-png"),
+            ],
+            resources: [.copy("Fixtures")]
+        ),
     ]
 )

@@ -27,6 +27,47 @@ enum EmbeddedTemplate {
         <img class="frame" src="{{FRAME}}">
       </div>
     </div>
+    <script>
+    addEventListener('load', () => document.fonts.ready.then(() => {
+      if ('{{THEME.captionFit}}' !== 'shrink') return;
+      const caption = document.querySelector('.caption');
+      const subtitle = caption.querySelector('.subtitle');
+      const deviceBox = document.querySelector('.device').getBoundingClientRect();
+      const gap = parseFloat('{{THEME.captionFitGap}}');
+      const minPercent = parseFloat('{{THEME.captionMinScale}}');
+      const titleSize = parseFloat(getComputedStyle(caption).fontSize);
+      const subtitleSize = parseFloat(getComputedStyle(subtitle).fontSize);
+      const subtitleSpacing = parseFloat(getComputedStyle(subtitle).marginTop);
+      const captionText = document.createRange();
+      captionText.selectNodeContents(caption);
+      const clearsDevice = () => {
+        const textBox = captionText.getBoundingClientRect();
+        return textBox.bottom + gap <= deviceBox.top || textBox.top - gap >= deviceBox.bottom;
+      };
+      const scaleCaption = percent => {
+        caption.style.fontSize = titleSize * percent / 100 + 'px';
+        subtitle.style.fontSize = subtitleSize * percent / 100 + 'px';
+        subtitle.style.marginTop = subtitleSpacing * percent / 100 + 'px';
+      };
+      let outcome = '100';
+      if (!clearsDevice()) {
+        scaleCaption(minPercent);
+        if (clearsDevice()) {
+          let fittingPercent = minPercent, overlappingPercent = 100;
+          while (overlappingPercent - fittingPercent > 1) {
+            const middlePercent = Math.floor((fittingPercent + overlappingPercent) / 2);
+            scaleCaption(middlePercent);
+            if (clearsDevice()) fittingPercent = middlePercent; else overlappingPercent = middlePercent;
+          }
+          scaleCaption(fittingPercent);
+          outcome = String(fittingPercent);
+        } else {
+          outcome = 'overlaps';
+        }
+      }
+      document.body.dataset.captionFit = outcome;
+    }));
+    </script>
     </body></html>
     """#
 
@@ -54,6 +95,47 @@ enum EmbeddedTemplate {
       </div>
       <div class="caption">{{cap.title}}<div class="subtitle">{{cap.subtitle}}</div></div>
     </div>
+    <script>
+    addEventListener('load', () => document.fonts.ready.then(() => {
+      if ('{{THEME.captionFit}}' !== 'shrink') return;
+      const caption = document.querySelector('.caption');
+      const subtitle = caption.querySelector('.subtitle');
+      const deviceBox = document.querySelector('.device').getBoundingClientRect();
+      const gap = parseFloat('{{THEME.captionFitGap}}');
+      const minPercent = parseFloat('{{THEME.captionMinScale}}');
+      const titleSize = parseFloat(getComputedStyle(caption).fontSize);
+      const subtitleSize = parseFloat(getComputedStyle(subtitle).fontSize);
+      const subtitleSpacing = parseFloat(getComputedStyle(subtitle).marginTop);
+      const captionText = document.createRange();
+      captionText.selectNodeContents(caption);
+      const clearsDevice = () => {
+        const textBox = captionText.getBoundingClientRect();
+        return textBox.bottom + gap <= deviceBox.top || textBox.top - gap >= deviceBox.bottom;
+      };
+      const scaleCaption = percent => {
+        caption.style.fontSize = titleSize * percent / 100 + 'px';
+        subtitle.style.fontSize = subtitleSize * percent / 100 + 'px';
+        subtitle.style.marginTop = subtitleSpacing * percent / 100 + 'px';
+      };
+      let outcome = '100';
+      if (!clearsDevice()) {
+        scaleCaption(minPercent);
+        if (clearsDevice()) {
+          let fittingPercent = minPercent, overlappingPercent = 100;
+          while (overlappingPercent - fittingPercent > 1) {
+            const middlePercent = Math.floor((fittingPercent + overlappingPercent) / 2);
+            scaleCaption(middlePercent);
+            if (clearsDevice()) fittingPercent = middlePercent; else overlappingPercent = middlePercent;
+          }
+          scaleCaption(fittingPercent);
+          outcome = String(fittingPercent);
+        } else {
+          outcome = 'overlaps';
+        }
+      }
+      document.body.dataset.captionFit = outcome;
+    }));
+    </script>
     </body></html>
     """#
 

@@ -14,16 +14,38 @@ enum FrameSource {
         }.sorted()
     }
 
-    /// frameit names look like "Apple iPhone 17 Pro Max Silver" — the part after
-    /// the device query is the color.
-    static func matches(in names: [String], query: String) -> [String: String] {
-        var found: [String: String] = [:]
-        for name in names {
-            guard let range = name.range(of: query, options: [.caseInsensitive]) else { continue }
-            let colorText = name[range.upperBound...].trimmingCharacters(in: .whitespaces)
-            found[slug(colorText.isEmpty ? "standard" : colorText)] = name
+    /// frameit names look like "Apple iPhone 17 Pro Max Silver": a model, then a color.
+    /// The query must match whole words. The words after it are the color, unless their
+    /// first word continues a name that two or more frames share — then the frame belongs
+    /// to a longer model ("Apple iPhone 17 Pro Silver" is not an "iPhone 17").
+    static func framesByColor(for query: String, in names: [String]) throws -> [String: String] {
+        let catalog = FrameCatalog(names: names)
+        let queryName = FrameCatalog.FrameName(query)
+        guard !queryName.words.isEmpty else { throw AppshotError("no device name given") }
+
+        let matches = catalog.matches(of: queryName.comparableWords)
+        let colorMatches = matches.filter(\.isColorOfQueriedModel)
+        if Set(colorMatches.map(\.model)).count == 1 {
+            return Dictionary(colorMatches.map { ($0.colorSlug, $0.frame.name) }) { _, last in last }
         }
-        return found
+        guard matches.isEmpty else {
+            throw AppshotError("\"\(query)\" matches more than one device — pick one:"
+                + listing(matches.map(\.model)))
+        }
+        for shorterQueryLength in stride(from: queryName.words.count - 1, to: 0, by: -1) {
+            let nearbyModels = catalog.matches(of: Array(queryName.comparableWords.prefix(shorterQueryLength)))
+                .map(\.model)
+            guard nearbyModels.isEmpty else {
+                let shorterQuery = queryName.words.prefix(shorterQueryLength).joined(separator: " ")
+                throw AppshotError("no frame matches \"\(query)\" — devices matching \"\(shorterQuery)\":"
+                    + listing(nearbyModels))
+            }
+        }
+        throw AppshotError("no frame matches \"\(query)\" — try `appshot devices list`")
+    }
+
+    private static func listing(_ models: [String]) -> String {
+        "\n  " + Set(models).sorted().joined(separator: "\n  ")
     }
 
     static func download(name: String) throws -> Data {
@@ -48,16 +70,66 @@ enum FrameSource {
     }
 }
 
+private struct FrameCatalog {
+    struct FrameName {
+        let name: String
+        let words: [Substring]
+        let comparableWords: [String]
+
+        init(_ name: String) {
+            self.name = name
+            words = name.split { $0 == " " || $0 == "-" }
+            comparableWords = words.map { $0.lowercased() }
+        }
+    }
+
+    struct Match {
+        let frame: FrameName
+        let queryEnd: Int
+        let modelWordCount: Int
+
+        var model: String { String(frame.name[..<frame.words[modelWordCount - 1].endIndex]) }
+        var isColorOfQueriedModel: Bool { modelWordCount == queryEnd }
+        var colorSlug: String {
+            let colorText = frame.words[queryEnd...].joined(separator: " ")
+            return FrameSource.slug(colorText.isEmpty ? "standard" : colorText)
+        }
+    }
+
+    private let frames: [FrameName]
+    private let frameCountByPrefix: [[String]: Int]
+
+    init(names: [String]) {
+        frames = names.map(FrameName.init)
+        var frameCountByPrefix: [[String]: Int] = [:]
+        for frame in frames {
+            for lastWord in frame.comparableWords.indices {
+                frameCountByPrefix[Array(frame.comparableWords[...lastWord]), default: 0] += 1
+            }
+        }
+        self.frameCountByPrefix = frameCountByPrefix
+    }
+
+    func matches(of queryWords: [String]) -> [Match] {
+        frames.compactMap { frame in
+            guard let queryRange = frame.comparableWords.firstRange(of: queryWords) else { return nil }
+            var modelWordCount = queryRange.upperBound
+            while modelWordCount < frame.words.count,
+                  frameCountByPrefix[Array(frame.comparableWords[...modelWordCount]), default: 0] >= 2 {
+                modelWordCount += 1
+            }
+            return Match(frame: frame, queryEnd: queryRange.upperBound, modelWordCount: modelWordCount)
+        }
+    }
+}
+
 enum DevicePackBuilder {
     static let alphaThreshold: UInt8 = 16
 
-    static func fetch(query: String, colorFilter: [String]?, packID: String?,
-                      devicesDir: String, log: (String) -> Void) throws -> String {
-        let names = try FrameSource.upstreamNames()
-        var matches = FrameSource.matches(in: names, query: query)
-        guard !matches.isEmpty else {
-            throw AppshotError("no frame matches \"\(query)\" — try `appshot devices list`")
-        }
+    static func fetch(query: String, colorFilter: [String]?, packID: String?, devicesDir: String,
+                      upstreamNames: [String], download: (String) throws -> Data = FrameSource.download(name:),
+                      log: (String) -> Void) throws -> String {
+        var matches = try FrameSource.framesByColor(for: query, in: upstreamNames)
         if let colorFilter {
             let missing = colorFilter.filter { matches[$0] == nil }
             guard missing.isEmpty else {
@@ -67,15 +139,22 @@ enum DevicePackBuilder {
         }
 
         let deviceID = packID ?? FrameSource.slug(query)
-        let packDir = join(devicesDir, deviceID)
-        try FileManager.default.ensureDirectory(packDir)
+        let fm = FileManager.default
+        // Staged on the studio's volume, so the finished pack moves into devices/ in one
+        // rename and a failed fetch leaves nothing there.
+        let stagingDir = try fm.url(for: .itemReplacementDirectory, in: .userDomainMask,
+                                    appropriateFor: URL(fileURLWithPath: devicesDir).deletingLastPathComponent(),
+                                    create: true)
+        defer { try? fm.removeItem(at: stagingDir) }
+        let packDir = join(stagingDir.path, deviceID)
+        try fm.ensureDirectory(packDir)
 
         var frameSize: [Int]?
         var screenRect: [Int]?
         var colorFiles: [String: String] = [:]
         for (color, name) in matches.sorted(by: { $0.key < $1.key }) {
             log("  ↓ \(name).png")
-            let bytes = try FrameSource.download(name: name)
+            let bytes = try download(name)
             let framePath = join(packDir, "frame-\(color).png")
             try bytes.write(to: URL(fileURLWithPath: framePath))
             let frame = try RGBAImage.decode(path: framePath)
@@ -95,6 +174,9 @@ enum DevicePackBuilder {
         let spec = DeviceSpec(frameSize: frameSize!, screen: screenRect!, mask: "hole-mask.png",
                               colors: colorFiles, default: defaultColor)
         try writeJSON(spec, to: join(packDir, "device.json"))
+        try fm.ensureDirectory(devicesDir)
+        _ = try fm.replaceItemAt(URL(fileURLWithPath: join(devicesDir, deviceID)),
+                                 withItemAt: URL(fileURLWithPath: packDir))
         log("\ndevices/\(deviceID): frame \(frameSize![0])×\(frameSize![1]), "
             + "screen \(screenRect!), colors \(colorFiles.keys.sorted()), default '\(defaultColor)'")
         return deviceID

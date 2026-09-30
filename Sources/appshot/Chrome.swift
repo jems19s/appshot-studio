@@ -46,8 +46,12 @@ enum Chrome {
     // itself as newly installed and launch GoogleUpdater on every run — which
     // macOS App Management then blocks with a "prevented from modifying apps"
     // notification (and the wake can stall headless runs for minutes).
+    //
+    // `dumpDOM` makes Chrome also print the page as its scripts left it — the only way a
+    // template can report back (caption auto-fit does).
+    @discardableResult
     static func screenshot(page: String, output: String, width: Int, height: Int,
-                           binary: String) throws {
+                           binary: String, dumpDOM: Bool = false) throws -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: binary)
         process.arguments = ["--headless=new", "--disable-gpu", "--hide-scrollbars",
@@ -56,11 +60,14 @@ enum Chrome {
                              "--default-background-color=00000000",
                              "--virtual-time-budget=3000"]
             + extraFlags()
+            + (dumpDOM ? ["--dump-dom"] : [])
             + ["--screenshot=\(output)", "file://\(page)"]
+        let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
-        process.standardOutput = Pipe()
+        process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
         try process.run()
+        let pageDOM = dumpDOM ? stdoutPipe.fileHandleForReading.readDataToEndOfFile() : Data()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
             let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
@@ -68,5 +75,6 @@ enum Chrome {
                 .split(separator: "\n").suffix(3).joined(separator: "\n") ?? ""
             throw AppshotError("Chrome exited with status \(process.terminationStatus)\n\(tail)")
         }
+        return String(data: pageDOM, encoding: .utf8) ?? ""
     }
 }

@@ -11,6 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: swift build
+      - run: swift test
       - run: swift run appshot devices fetch "iPhone 17 Pro Max" --colors silver
       - run: swift run appshot render --app demo
       - uses: actions/upload-artifact@v4

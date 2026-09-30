@@ -9,7 +9,8 @@
     "accent": "#2e7d54",
     "headlineColor": "#1c2b22",
     "subtitleColor": "#57685c",
-    "deviceShadow": "0 56px 90px rgba(18,48,31,.38)"
+    "deviceShadow": "0 56px 90px rgba(18,48,31,.38)",
+    "captionFit": "shrink"
   },
   "background": {
     "type": "mesh",

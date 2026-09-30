@@ -12,6 +12,7 @@ enum RenderEngine {
         let config = try loadJSON(AppConfig.self, at: configPath, what: "config")
         let width = config.output.width, height = config.output.height
         let theme = TemplateEngine.themeDefaults.merging(config.theme ?? [:]) { _, override in override }
+        let captionFit = try CaptionFit(theme: theme)
 
         let outputDir = join(root, "output", app)
         try fm.ensureDirectory(outputDir)
@@ -68,6 +69,7 @@ enum RenderEngine {
 
         let chrome = try Chrome.find(chromeOverride)
         var count = 0
+        var templatesWithoutFit = Set<String>()
         for locale in locales {
             let captions = try loadJSON([String: CaptionEntry].self,
                                         at: join(appDir, "captions", "\(locale).json"),
@@ -111,11 +113,32 @@ enum RenderEngine {
                 }
                 let temp = join(localeDir, ".\(slot.name).html")
                 try page.write(toFile: temp, atomically: true, encoding: .utf8)
-                try Chrome.screenshot(page: temp, output: join(localeDir, slot.name + ".png"),
-                                      width: width, height: height, binary: chrome)
+                let pageDOM = try Chrome.screenshot(page: temp, output: join(localeDir, slot.name + ".png"),
+                                                    width: width, height: height, binary: chrome,
+                                                    dumpDOM: captionFit.shrinks)
                 try fm.removeItem(atPath: temp)
                 count += 1
-                print("  ✓ \(locale)/\(slot.name).png")
+                let shotName = "\(locale)/\(slot.name)"
+                guard captionFit.shrinks else {
+                    print("  ✓ \(shotName).png")
+                    continue
+                }
+                switch CaptionFit.outcome(pageDOM: pageDOM) {
+                case .scaled(let percent) where percent < 100:
+                    print("  ✓ \(shotName).png — caption scaled to \(percent)%")
+                case .scaled:
+                    print("  ✓ \(shotName).png")
+                case .overlapsAtMinScale:
+                    print("  ✓ \(shotName).png — caption scaled to \(captionFit.minPercent)%")
+                    print("  ! \(app) \(shotName): the caption still runs into the device at captionMinScale "
+                        + "\(captionFit.minPercent)% — shorten it or lower captionMinScale")
+                case .notReported:
+                    print("  ✓ \(shotName).png")
+                    if templatesWithoutFit.insert(slot.template).inserted {
+                        print("  ! templates/\(slot.template).html doesn't support captionFit — "
+                            + "templates written by appshot 1.0 predate it (see the README)")
+                    }
+                }
             }
         }
         print("\n\(count) screenshot(s) → \(outputDir)")

@@ -10,6 +10,24 @@ enum Studio {
         let path = override ?? FileManager.default.currentDirectoryPath
         return URL(fileURLWithPath: path).standardizedFileURL.path
     }
+
+    private static func appNames(root: String) -> [String] {
+        let appsDir = join(root, "apps")
+        let entries = (try? FileManager.default.contentsOfDirectory(atPath: appsDir)) ?? []
+        return entries.filter { FileManager.default.fileExists(atPath: join(appsDir, $0, "config.json")) }
+            .sorted()
+    }
+
+    static func onlyApp(root: String) throws -> String {
+        let appsInStudio = appNames(root: root)
+        guard appsInStudio.count == 1 else {
+            let appsDir = join(root, "apps")
+            throw AppshotError(appsInStudio.isEmpty
+                ? "no app in \(appsDir) yet — create one with `appshot init`"
+                : "several apps in \(appsDir): \(appsInStudio.joined(separator: ", ")) — pick one with --app <name>")
+        }
+        return appsInStudio[0]
+    }
 }
 
 func join(_ parts: String...) -> String {
