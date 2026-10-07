@@ -1,7 +1,6 @@
 import Foundation
 
 /// Generates the background as a raw BMP — a scratch file Chrome reads once.
-/// (PNG-encoding a 4-megapixel gradient is what debug builds choke on.)
 enum BackgroundRenderer {
     static func make(_ background: AppConfig.Background, width: Int, height: Int,
                      scratchPath: String, appDir: String) throws -> String {

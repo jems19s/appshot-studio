@@ -1,5 +1,4 @@
 import Foundation
-import PNG
 import Testing
 @testable import appshot
 
@@ -139,12 +138,12 @@ import Testing
     /// 20×40 bezel art: a 4 px opaque border around a transparent screen hole.
     static func frameWithScreenHole(scratchPath: String) throws -> Data {
         let width = 20, height = 40
-        let pixels = (0..<(width * height)).map { index -> PNG.RGBA<UInt8> in
+        let rgbaBytes = (0..<(width * height)).flatMap { index -> [UInt8] in
             let column = index % width, row = index / width
             let insideHole = (4..<16).contains(column) && (4..<36).contains(row)
-            return PNG.RGBA(40, 40, 40, insideHole ? 0 : 255)
+            return insideHole ? [0, 0, 0, 0] : [40, 40, 40, 255]
         }
-        try RGBAImage(width: width, height: height, pixels: pixels).encodeRGBA(path: scratchPath)
+        try RGBAImage(width: width, height: height, rgbaBytes: rgbaBytes).encodeRGBA(path: scratchPath)
         return try Data(contentsOf: URL(fileURLWithPath: scratchPath))
     }
 

@@ -1,15 +1,6 @@
 {
-  "originHash" : "d1928c3a8b7d6e056cd36bb0e1adc71769fc5c70be560caf7b2e73cbf52d2903",
+  "originHash" : "0c7394fce4f08c3a92f9d2942011abdf79e93aa02ea5816033cbf2dfe461f115",
   "pins" : [
-    {
-      "identity" : "h",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/rarestype/h",
-      "state" : {
-        "revision" : "aa3626829160917d4378330617971977cbd78f5b",
-        "version" : "1.0.1"
-      }
-    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
@@ -17,15 +8,6 @@
       "state" : {
         "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
         "version" : "1.8.2"
-      }
-    },
-    {
-      "identity" : "swift-png",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tayloraswift/swift-png",
-      "state" : {
-        "revision" : "8a0bcd4df5e4b307c804937776a56dd6ecdf6396",
-        "version" : "4.5.1"
       }
     }
   ],

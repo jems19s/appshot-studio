@@ -2,6 +2,16 @@
 
 All notable changes to appshot-studio are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-10-07
+
+### Changed
+
+- Device frames are read, and the screen mask written, with macOS's own ImageIO instead of the swift-png package, which is no longer a dependency. Masks are pixel-identical (checked on iPhone, iPad, MacBook and Pixel frames) and 10–18% smaller.
+
+### Fixed
+
+- `devices fetch` from a debug build — `swift run`, as in CI and when running from a clone — spent 2–8 minutes compressing the screen mask. It now takes about 2 seconds, as the Homebrew build already did.
+
 ## [1.2.1] - 2026-10-07
 
 ### Fixed
@@ -58,6 +68,7 @@ All notable changes to appshot-studio are documented here. The format is based o
 - Two templates: `caption-top` and `caption-bottom`.
 - Rendering through headless Chrome.
 
+[1.2.2]: https://github.com/jems19s/appshot-studio/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/jems19s/appshot-studio/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/jems19s/appshot-studio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jems19s/appshot-studio/compare/v1.0.0...v1.1.0

@@ -1,5 +1,4 @@
 import Foundation
-import PNG
 
 enum FrameSource {
     static let rawBase = "https://raw.githubusercontent.com/fastlane/frameit-frames/gh-pages/latest/"
@@ -185,7 +184,7 @@ enum DevicePackBuilder {
         let width = frame.width, height = frame.height
         var transparent = [Bool](repeating: false, count: width * height)
         for index in 0..<(width * height) {
-            transparent[index] = frame.pixels[index].a < alphaThreshold
+            transparent[index] = frame.alpha(atPixel: index) < alphaThreshold
         }
 
         var outside = [Bool](repeating: false, count: width * height)
@@ -213,9 +212,9 @@ enum DevicePackBuilder {
         }
 
         var minX = width, minY = height, maxX = -1, maxY = -1
-        var maskPixels = [PNG.RGBA<UInt8>](repeating: PNG.RGBA(255, 255, 255, 0), count: width * height)
+        var maskBytes = [UInt8](repeating: 0, count: width * height * 4)
         for index in 0..<(width * height) where transparent[index] && !outside[index] {
-            maskPixels[index] = PNG.RGBA(255, 255, 255, 255)
+            maskBytes.replaceSubrange(index * 4..<index * 4 + 4, with: [255, 255, 255, 255])
             let x = index % width, y = index / width
             minX = min(minX, x); minY = min(minY, y)
             maxX = max(maxX, x); maxY = max(maxY, y)
@@ -224,7 +223,7 @@ enum DevicePackBuilder {
             throw AppshotError("no interior screen cutout found in the frame art")
         }
         return ([minX, minY, maxX - minX + 1, maxY - minY + 1],
-                RGBAImage(width: width, height: height, pixels: maskPixels))
+                RGBAImage(width: width, height: height, rgbaBytes: maskBytes))
     }
 
     static func installed(devicesDir: String) -> [(id: String, spec: DeviceSpec)] {
