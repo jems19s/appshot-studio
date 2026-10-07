@@ -8,8 +8,14 @@ struct Appshot: ParsableCommand {
         abstract: "Config-driven App Store screenshot renderer.",
         discussion: "Frames real app screenshots inside device bezels with localized captions "
             + "over generated backgrounds — HTML/CSS layouts rasterized by headless Chrome.",
-        version: "1.2.2",
+        version: "1.3.0",
         subcommands: [InitCommand.self, RenderCommand.self, DevicesCommand.self])
+
+    /// Line-buffered even when piped, so CI logs and coding agents see progress as it happens and in order with errors.
+    static func main() {
+        setvbuf(stdout, nil, _IOLBF, 0)
+        main(nil)
+    }
 }
 
 struct RenderCommand: ParsableCommand {
@@ -87,7 +93,7 @@ struct DevicesCommand: ParsableCommand {
         @Argument(help: "device name as frameit knows it, e.g. \"iPhone 17 Pro Max\"")
         var device: String
 
-        @Option(help: "comma-separated color slugs to fetch (default: all)")
+        @Option(help: "comma-separated colors to fetch, e.g. \"silver,deep-blue\" (default: all)")
         var colors: String?
 
         @Option(help: "device pack folder name (default: slug of the device name)")
@@ -97,7 +103,7 @@ struct DevicesCommand: ParsableCommand {
         var root: String?
 
         func run() throws {
-            let filter = colors?.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+            let filter = colors?.split(separator: ",").map { FrameSource.slug(String($0)) }
             _ = try DevicePackBuilder.fetch(query: device, colorFilter: filter, packID: id,
                                             devicesDir: join(Studio.root(root), "devices"),
                                             upstreamNames: FrameSource.upstreamNames()) { print($0) }

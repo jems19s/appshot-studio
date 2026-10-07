@@ -52,6 +52,16 @@ appshot render
 
 `--device` is fetched when it isn't installed yet. Optional: `--color` (default: the pack's default), `--size WIDTHxHEIGHT` (default: the App Store size for the device), repeatable `--locale` (default `en`) and `--caption` (one per screenshot, in file name order; the rest start empty), and `--overwrite` to replace an existing app's config. Theme and background start from the wizard's defaults — edit `config.json`. If the wizard's input runs out before it finishes, it stops with an error instead of waiting for an answer.
 
+### With a coding agent
+
+appshot ships a skill for AI coding agents (Claude Code, Cursor, Codex and others that read [Agent Skills](https://skills.sh)): it teaches the agent the whole flow — find the raw screenshots, set up the app without the wizard, write and translate captions, style, render and check every image.
+
+```bash
+npx skills add jems19s/appshot-studio
+```
+
+Add `-g` to install it for all your projects. Then ask your agent for App Store screenshots. The skill lives in [`skills/appshot/`](skills/appshot/SKILL.md) if you'd rather copy it by hand (for Claude Code: `~/.claude/skills/appshot/`).
+
 ### From a clone
 
 Try the bundled demo:

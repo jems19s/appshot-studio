@@ -2,6 +2,17 @@
 
 All notable changes to appshot-studio are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-07
+
+### Added
+
+- A skill for AI coding agents in `skills/appshot/`, installable with `npx skills add jems19s/appshot-studio`: it walks the agent through finding the raw screenshots, setting up the app without the wizard, writing and translating captions, styling, rendering and checking every image.
+
+### Fixed
+
+- `init --color` and `devices fetch --colors` take color names the way `devices list` prints them ("Deep Blue") as well as `deep-blue`.
+- With output piped (CI logs, coding agents), progress lines appeared only when the command ended, after any error. Output is now line-buffered, so it shows up as it happens and in order.
+
 ## [1.2.2] - 2026-10-07
 
 ### Changed
@@ -68,6 +79,7 @@ All notable changes to appshot-studio are documented here. The format is based o
 - Two templates: `caption-top` and `caption-bottom`.
 - Rendering through headless Chrome.
 
+[1.3.0]: https://github.com/jems19s/appshot-studio/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/jems19s/appshot-studio/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/jems19s/appshot-studio/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/jems19s/appshot-studio/compare/v1.1.0...v1.2.0

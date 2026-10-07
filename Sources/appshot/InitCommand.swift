@@ -17,7 +17,7 @@ struct InitCommand: ParsableCommand {
     @Option(help: "device as frameit names it, e.g. \"iPhone 17 Pro Max\" (fetched when not installed)")
     var device: String?
 
-    @Option(help: "device color (default: the device pack's default)")
+    @Option(help: "device color, e.g. \"deep-blue\" or \"Deep Blue\" (default: the device pack's default)")
     var color: String?
 
     @Option(help: "output size WIDTHxHEIGHT (default: the App Store size for the device)")
@@ -250,7 +250,7 @@ struct InitCommand: ParsableCommand {
         let deviceID = try installedOrFetchedDevice(named: device!, devicesDir: devicesDir)
         let spec = try loadJSON(DeviceSpec.self, at: join(devicesDir, deviceID, "device.json"),
                                 what: "device pack")
-        let deviceColor = color ?? spec.default ?? spec.colors.keys.sorted()[0]
+        let deviceColor = color.map(FrameSource.slug) ?? spec.default ?? spec.colors.keys.sorted()[0]
         guard spec.colors[deviceColor] != nil else {
             throw AppshotError("devices/\(deviceID) has no '\(deviceColor)' frame; it has "
                 + spec.colors.keys.sorted().joined(separator: ", "))

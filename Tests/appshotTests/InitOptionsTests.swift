@@ -66,6 +66,13 @@ import Testing
         try runInit(["--overwrite"])
     }
 
+    @Test func acceptsColorNamesAsFrameitPrintsThem() throws {
+        try runInit(["--color", "Deep Blue"])
+        let config = try loadJSON(AppConfig.self, at: join(studio.path, "apps", "plants", "config.json"),
+                                  what: "config")
+        #expect(config.deviceColor == "deep-blue")
+    }
+
     @Test func namesTheColorsAPackHas() {
         #expect(thrownMessage { try runInit(["--color", "cosmic-orange"]) }
             == "devices/iphone-17-pro-max has no 'cosmic-orange' frame; it has deep-blue, silver")
