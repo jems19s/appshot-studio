@@ -23,38 +23,52 @@ Everything that makes your shots *yours* — device, fonts, colors, background, 
 ## Quick start
 
 ```bash
-git clone https://github.com/jems19s/appshot-studio && cd appshot-studio
-swift run appshot init
+brew install jems19s/tap/appshot
+mkdir my-screenshots && cd my-screenshots
+appshot init
 ```
+
+Homebrew installs the prebuilt universal binary (Apple silicon and Intel) from the GitHub release — no Xcode needed. The binary is self-contained — running `appshot init` in an empty directory bootstraps a fresh studio (`apps/`, `templates/`, `devices/`).
 
 `init` interviews you — device (fetched live, arrow-key select), colors, output size, your screenshots folder, locales, captions, theme — then writes `apps/<name>/` and offers to render on the spot. **Esc goes back a step** (previous answers are kept as defaults); in plain pipes use `0` on menus and `<` on text prompts. Every answer lands in `config.json`, so from then on iteration is *edit the file, re-run*:
 
 ```bash
-swift run appshot render --app myapp            # everything
-swift run appshot render --app myapp --locale en --slot 01-home   # while iterating
+appshot render                                 # everything
+appshot render --locale en --slot 01-home      # while iterating
 ```
 
-Or try the bundled demo first:
+`--app` is only needed once `apps/` holds more than one app.
+
+### Without the wizard
+
+For scripts, CI and coding agents, `--name` skips the questions and takes every answer from options:
 
 ```bash
+appshot init --name myapp --device "iPhone 17 Pro Max" --screenshots ./screens \
+  --locale en-US --locale de-DE \
+  --caption 'Every plant,\n*happily watered*' --caption 'Care plans *that stick*'
+appshot render
+```
+
+`--device` is fetched when it isn't installed yet. Optional: `--color` (default: the pack's default), `--size WIDTHxHEIGHT` (default: the App Store size for the device), repeatable `--locale` (default `en`) and `--caption` (one per screenshot, in file name order; the rest start empty), and `--overwrite` to replace an existing app's config. Theme and background start from the wizard's defaults — edit `config.json`. If the wizard's input runs out before it finishes, it stops with an error instead of waiting for an answer.
+
+### From a clone
+
+Try the bundled demo:
+
+```bash
+git clone https://github.com/jems19s/appshot-studio && cd appshot-studio
 swift run appshot devices fetch "iPhone 17 Pro Max"
 swift run appshot render        # → output/demo/<locale>/<slot>.png, 1320×2868
 ```
 
-To install `appshot` as a standalone command (so it works from any folder, not just this clone):
-
-```bash
-brew install jems19s/tap/appshot
-# or, from a clone: swift build -c release && sudo cp .build/release/appshot /usr/local/bin/
-```
-
-Homebrew installs the prebuilt universal binary (Apple silicon and Intel) from the GitHub release — no Xcode needed. The binary is self-contained — running `appshot init` in an empty directory bootstraps a fresh studio (`apps/`, `templates/`, `devices/`), and a plain `appshot render` then renders that app; `--app` is only needed once `apps/` holds more than one.
+To build the command from source instead of Homebrew: `swift build -c release && sudo cp .build/release/appshot /usr/local/bin/`.
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
-| `appshot init` | interactive wizard — scaffolds `apps/<name>/` (config, captions, assets) |
+| `appshot init` | interactive wizard, or `--name` with options to skip it — scaffolds `apps/<name>/` (config, captions, assets) |
 | `appshot render` | renders `apps/<app>/` → `output/<app>/<locale>/<slot>.png`; `--app` (optional when `apps/` holds one app), repeatable `--locale`/`--slot`, `--chrome`, `--root` |
 | `appshot devices` | installed packs; `devices list` = every frame upstream; `devices fetch "<name>"` downloads + measures a pack (`--colors`, `--id`) |
 

@@ -2,6 +2,21 @@
 
 All notable changes to appshot-studio are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-07
+
+### Added
+
+- `appshot init --name <app> --device <name> --screenshots <folder>` scaffolds an app without the wizard, for scripts, CI and coding agents. Optional `--color`, `--size WIDTHxHEIGHT`, repeatable `--locale` and `--caption`, and `--overwrite`; the device is fetched when it isn't installed.
+
+### Changed
+
+- The README's quick start begins with the Homebrew install; running from a clone moved below it.
+
+### Fixed
+
+- The wizard asked the same question forever when its input ended (a script or pipe that ran out of answers). It now stops with an error naming the question.
+- With output piped, menu options appeared after the prompt that asks for them, so a piped run saw "Enter a number" with no list.
+
 ## [1.1.0] - 2026-09-30
 
 ### Added
@@ -37,5 +52,6 @@ All notable changes to appshot-studio are documented here. The format is based o
 - Two templates: `caption-top` and `caption-bottom`.
 - Rendering through headless Chrome.
 
+[1.2.0]: https://github.com/jems19s/appshot-studio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jems19s/appshot-studio/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jems19s/appshot-studio/releases/tag/v1.0.0

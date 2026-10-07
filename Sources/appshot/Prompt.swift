@@ -23,7 +23,7 @@ enum Prompt {
             let prompt = "\(green)?\(reset) \(label)\(hints.isEmpty ? "" : " \(dim)\(hints)\(reset)") \(cyan)›\(reset) "
             let answer: String
             if interactive {
-                switch editLine(prompt: prompt) {
+                switch editLine(prompt: prompt, label: label) {
                 case .back:
                     if canGoBack { return nil }
                     continue
@@ -32,7 +32,7 @@ enum Prompt {
                 }
             } else {
                 emit(prompt)
-                answer = (readLine() ?? "").trimmingCharacters(in: .whitespaces)
+                answer = readAnswer(waitingFor: label)
                 if canGoBack && answer == "<" { return nil }
             }
             if !answer.isEmpty { return answer }
@@ -46,7 +46,7 @@ enum Prompt {
         let prompt = "\(green)?\(reset) \(label) \(dim)\(hints)\(reset) "
         guard interactive, let raw = RawMode() else {
             emit(prompt)
-            let answer = (readLine() ?? "").trimmingCharacters(in: .whitespaces).lowercased()
+            let answer = readAnswer(waitingFor: label).lowercased()
             if canGoBack && answer == "<" { return nil }
             if answer.isEmpty { return defaultValue }
             return answer.hasPrefix("y")
@@ -145,10 +145,10 @@ enum Prompt {
         case back
     }
 
-    private static func editLine(prompt: String) -> LineResult {
+    private static func editLine(prompt: String, label: String) -> LineResult {
         guard let raw = RawMode() else {
             emit(prompt)
-            return .entered(readLine() ?? "")
+            return .entered(readAnswer(waitingFor: label))
         }
         defer { raw.restore() }
         emit(prompt)
@@ -193,8 +193,7 @@ enum Prompt {
         if canGoBack { print("  0) ← back") }
         while true {
             emit("Enter a number (\(canGoBack ? "0" : "1")-\(options.count)) › ")
-            guard let answer = readLine(),
-                  let number = Int(answer.trimmingCharacters(in: .whitespaces)) else { continue }
+            guard let number = Int(readAnswer(waitingFor: label)) else { continue }
             if canGoBack && number == 0 { return nil }
             if (1...options.count).contains(number) { return number - 1 }
         }
@@ -205,7 +204,7 @@ enum Prompt {
         print("? \(label)")
         for (index, option) in options.enumerated() { print("  \(index + 1)) \(option)") }
         emit("Enter numbers separated by commas (empty = all\(canGoBack ? ", 0 = back" : "")) › ")
-        let numbers = (readLine() ?? "").split(separator: ",")
+        let numbers = readAnswer(waitingFor: label).split(separator: ",")
             .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
         if canGoBack && numbers == [0] { return nil }
         let valid = numbers.filter { (1...options.count).contains($0) }
@@ -217,8 +216,21 @@ enum Prompt {
         return interactive ? "(esc = back)" : "(< = back)"
     }
 
+    private static func readAnswer(waitingFor label: String) -> String {
+        guard let line = readLine() else {
+            let message = "\nError: input ended at \"\(label)\". Run `appshot init` in a terminal, "
+                + "or pass every answer as an option (`appshot init --help`).\n"
+            fflush(stdout)
+            FileHandle.standardError.write(Data(message.utf8))
+            exit(1)
+        }
+        return line.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Goes through the same buffer as `print`, so piped output keeps prompts and menus in order.
     private static func emit(_ text: String) {
-        FileHandle.standardOutput.write(Data(text.utf8))
+        print(text, terminator: "")
+        fflush(stdout)
     }
 
     // MARK: key decoding

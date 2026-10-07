@@ -4,10 +4,42 @@ import Foundation
 struct InitCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "init",
-        abstract: "Interactively scaffold apps/<name>/ — device, screenshots, locales, captions, theme.")
+        abstract: "Scaffold apps/<name>/ — device, screenshots, locales, captions, theme.",
+        discussion: "Without options it runs an interactive wizard. With --name it takes every answer from "
+            + "options instead, for scripts, CI and coding agents.")
 
     @Option(help: "studio root (default: current directory)")
     var root: String?
+
+    @Option(name: .customLong("name"), help: "app name — skips the wizard; needs --device and --screenshots")
+    var appName: String?
+
+    @Option(help: "device as frameit names it, e.g. \"iPhone 17 Pro Max\" (fetched when not installed)")
+    var device: String?
+
+    @Option(help: "device color (default: the device pack's default)")
+    var color: String?
+
+    @Option(help: "output size WIDTHxHEIGHT (default: the App Store size for the device)")
+    var size: String?
+
+    @Option(help: "folder with your screenshots (PNG)")
+    var screenshots: String?
+
+    @Option(name: .customLong("locale"), help: "locale to create captions for (repeatable, default: en)")
+    var locales: [String] = []
+
+    @Option(name: .customLong("caption"), help: "caption for each screenshot, in file name order (repeatable)")
+    var captions: [String] = []
+
+    @Flag(help: "replace an existing apps/<name>/config.json")
+    var overwrite = false
+
+    private static let defaultMeshColors = [
+        "#e8ecf4", "#dfe7f7", "#f3f0ea",
+        "#d5dcef", "#eef0f2", "#e2e6ee",
+        "#e9e4f2", "#d9e2ef", "#f2f2ea",
+    ]
 
     private struct Draft {
         var name = ""
@@ -28,9 +60,28 @@ struct InitCommand: ParsableCommand {
         case name, device, color, size, screenshots, captions, locales, accent, headline, background, finished
     }
 
+    func validate() throws {
+        let answersGiven = device != nil || color != nil || size != nil || screenshots != nil
+            || !locales.isEmpty || !captions.isEmpty || overwrite
+        if appName == nil && answersGiven {
+            throw ValidationError("add --name to skip the wizard, or drop the options to run it")
+        }
+        if appName != nil && (device == nil || screenshots == nil) {
+            throw ValidationError("--name skips the wizard, so it also needs --device and --screenshots")
+        }
+    }
+
     func run() throws {
-        let fm = FileManager.default
         let root = Studio.root(root)
+        if let appName {
+            try scaffold(appName: appName, root: root)
+        } else {
+            try runWizard(root: root)
+        }
+    }
+
+    private func runWizard(root: String) throws {
+        let fm = FileManager.default
         print("appshot init — answers become apps/<name>/config.json; everything is editable later.")
         print(Prompt.dim + (Prompt.interactive
             ? "esc goes back a step."
@@ -178,6 +229,88 @@ struct InitCommand: ParsableCommand {
         }
 
         try write(draft: draft, root: root)
+        printNotes(draft: draft)
+        if Prompt.confirm("Render now?") == true {
+            print("\nRendering '\(draft.name)' …")
+            try RenderEngine.renderApp(app: draft.name, root: root, onlyLocales: [], onlySlots: [],
+                                       chromeOverride: nil)
+        } else {
+            print("\nWhen ready: appshot render --app \(draft.name)")
+        }
+    }
+
+    private func scaffold(appName: String, root: String) throws {
+        let name = FrameSource.slug(appName)
+        guard !name.isEmpty else { throw AppshotError("--name needs at least one letter or digit") }
+        if !overwrite, FileManager.default.fileExists(atPath: join(root, "apps", name, "config.json")) {
+            throw AppshotError("apps/\(name) already exists — pass --overwrite to replace its config")
+        }
+
+        let devicesDir = join(root, "devices")
+        let deviceID = try installedOrFetchedDevice(named: device!, devicesDir: devicesDir)
+        let spec = try loadJSON(DeviceSpec.self, at: join(devicesDir, deviceID, "device.json"),
+                                what: "device pack")
+        let deviceColor = color ?? spec.default ?? spec.colors.keys.sorted()[0]
+        guard spec.colors[deviceColor] != nil else {
+            throw AppshotError("devices/\(deviceID) has no '\(deviceColor)' frame; it has "
+                + spec.colors.keys.sorted().joined(separator: ", "))
+        }
+
+        let outputSize: (width: Int, height: Int)
+        if let size {
+            outputSize = try parsedOutputSize(size)
+        } else if let storeSize = appStoreSize(deviceID: deviceID) {
+            outputSize = (storeSize.width, storeSize.height)
+        } else {
+            throw AppshotError("no App Store size known for devices/\(deviceID) — pass --size WIDTHxHEIGHT")
+        }
+
+        let folder = screenshotFolderPath(screenshots!)
+        let files = pngFiles(in: folder)
+        guard !files.isEmpty else { throw AppshotError("no PNGs in \(folder)") }
+        guard captions.count <= files.count else {
+            throw AppshotError("\(captions.count) captions for \(files.count) screenshots: "
+                + files.joined(separator: ", "))
+        }
+
+        var draft = Draft()
+        draft.name = name
+        draft.deviceID = deviceID
+        draft.deviceColor = deviceColor
+        (draft.width, draft.height) = outputSize
+        draft.folder = folder
+        draft.files = files
+        (draft.slots, draft.titles) = makeSlots(files: files)
+        for (index, caption) in captions.enumerated() {
+            draft.titles[index] = caption.replacingOccurrences(of: "\\n", with: "\n")
+        }
+        draft.locales = locales.isEmpty ? ["en"] : locales
+        draft.background = .init(type: "mesh", colors: Self.defaultMeshColors)
+
+        try copyAssets(files: files, from: folder, to: join(root, "apps", name, "assets"))
+        try write(draft: draft, root: root)
+        printNotes(draft: draft)
+        print("\nNext: appshot render --app \(name)")
+    }
+
+    private func installedOrFetchedDevice(named deviceName: String, devicesDir: String) throws -> String {
+        let deviceID = FrameSource.slug(deviceName)
+        let installedDeviceIDs = DevicePackBuilder.installed(devicesDir: devicesDir).map(\.id)
+        if installedDeviceIDs.contains(deviceID) { return deviceID }
+        print("Fetching \(deviceName) (frames come from fastlane/frameit-frames)…")
+        return try DevicePackBuilder.fetch(query: deviceName, colorFilter: nil, packID: nil,
+                                           devicesDir: devicesDir,
+                                           upstreamNames: FrameSource.upstreamNames()) { print($0) }
+    }
+
+    private func parsedOutputSize(_ answer: String) throws -> (width: Int, height: Int) {
+        let sides = answer.lowercased().split { $0 == "x" || $0 == "×" }
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        guard sides.count == 2 else { throw AppshotError("Expected --size WIDTHxHEIGHT, e.g. 1320x2868.") }
+        return (try NumberRule.pixelSize.validated(sides[0]), try NumberRule.pixelSize.validated(sides[1]))
+    }
+
+    private func printNotes(draft: Draft) {
         print("""
 
         Done. Notes:
@@ -186,13 +319,6 @@ struct InitCommand: ParsableCommand {
           · Device size/position = layout.deviceWidth/deviceTop in config.json (slots can override per shot).
           · Theme and background live there too — tweak, then re-run render.
         """)
-        if Prompt.confirm("Render now?") == true {
-            print("\nRendering '\(draft.name)' …")
-            try RenderEngine.renderApp(app: draft.name, root: root, onlyLocales: [], onlySlots: [],
-                                       chromeOverride: nil)
-        } else {
-            print("\nWhen ready: appshot render --app \(draft.name)")
-        }
     }
 
     private func write(draft: Draft, root: String) throws {
@@ -271,10 +397,9 @@ struct InitCommand: ParsableCommand {
 
     private func pickOutputSize(deviceID: String, current: (Int, Int)?) -> (Int, Int)? {
         var options: [(label: String, size: (Int, Int)?)] = []
-        if deviceID.contains("ipad") {
-            options.append(("2048 × 2732 — App Store iPad 13″", (2048, 2732)))
-        } else if deviceID.contains("iphone") {
-            options.append(("1320 × 2868 — App Store iPhone 6.9″", (1320, 2868)))
+        if let storeSize = appStoreSize(deviceID: deviceID) {
+            options.append(("\(storeSize.width) × \(storeSize.height) — App Store \(storeSize.display)",
+                            (storeSize.width, storeSize.height)))
         }
         options.append(("Custom…", nil))
         while true {
@@ -305,16 +430,19 @@ struct InitCommand: ParsableCommand {
         }
     }
 
+    private func appStoreSize(deviceID: String) -> (display: String, width: Int, height: Int)? {
+        if deviceID.contains("ipad") { return ("iPad 13″", 2048, 2732) }
+        if deviceID.contains("iphone") { return ("iPhone 6.9″", 1320, 2868) }
+        return nil
+    }
+
     private func pickScreenshotFolder(defaultFolder: String?) -> (String, [String])? {
-        let fm = FileManager.default
         while true {
             guard let answer = Prompt.text("Folder with your screenshots (PNG)",
                                            defaultValue: defaultFolder ?? ".",
                                            canGoBack: true) else { return nil }
-            let folder = URL(fileURLWithPath: (answer as NSString).expandingTildeInPath)
-                .standardizedFileURL.path
-            let entries = (try? fm.contentsOfDirectory(atPath: folder)) ?? []
-            let files = entries.filter { $0.lowercased().hasSuffix(".png") && !$0.hasPrefix(".") }.sorted()
+            let folder = screenshotFolderPath(answer)
+            let files = pngFiles(in: folder)
             if files.isEmpty {
                 print("No PNGs in \(folder) — try another folder.")
                 continue
@@ -322,6 +450,15 @@ struct InitCommand: ParsableCommand {
             print("Found \(files.count):\n  " + files.joined(separator: "\n  "))
             if Prompt.confirm("Use these?", canGoBack: true) == true { return (folder, files) }
         }
+    }
+
+    private func screenshotFolderPath(_ answer: String) -> String {
+        URL(fileURLWithPath: (answer as NSString).expandingTildeInPath).standardizedFileURL.path
+    }
+
+    private func pngFiles(in folder: String) -> [String] {
+        let entries = (try? FileManager.default.contentsOfDirectory(atPath: folder)) ?? []
+        return entries.filter { $0.lowercased().hasSuffix(".png") && !$0.hasPrefix(".") }.sorted()
     }
 
     private func makeSlots(files: [String]) -> ([AppConfig.Slot], [String]) {
@@ -413,11 +550,7 @@ struct InitCommand: ParsableCommand {
                                              canGoBack: true) else { continue }
                 return .init(type: "image", file: file)
             default:
-                return .init(type: "mesh", colors: current?.colors ?? [
-                    "#e8ecf4", "#dfe7f7", "#f3f0ea",
-                    "#d5dcef", "#eef0f2", "#e2e6ee",
-                    "#e9e4f2", "#d9e2ef", "#f2f2ea",
-                ])
+                return .init(type: "mesh", colors: current?.colors ?? Self.defaultMeshColors)
             }
         }
     }
