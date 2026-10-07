@@ -2,15 +2,12 @@ import Foundation
 import PNG
 
 enum FrameSource {
-    static let listingURL = "https://api.github.com/repos/fastlane/frameit-frames/contents/latest"
     static let rawBase = "https://raw.githubusercontent.com/fastlane/frameit-frames/gh-pages/latest/"
 
-    struct Entry: Decodable { var name: String }
-
     static func upstreamNames() throws -> [String] {
-        let entries = try JSONDecoder().decode([Entry].self, from: httpGet(listingURL))
-        return entries.compactMap { entry in
-            entry.name.hasSuffix(".png") ? String(entry.name.dropLast(4)) : nil
+        let frameFiles = try JSONDecoder().decode([String].self, from: httpGet(rawBase + "files.json"))
+        return frameFiles.compactMap { file in
+            file.hasSuffix(".png") ? String(file.dropLast(4)) : nil
         }.sorted()
     }
 

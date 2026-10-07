@@ -2,6 +2,12 @@
 
 All notable changes to appshot-studio are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-10-07
+
+### Fixed
+
+- `devices fetch`, `devices list` and the wizard's device step read the frame list from GitHub's API, which allows 60 requests an hour per network address without a login. On shared machines such as GitHub Actions runners that limit runs out: the fetch failed with "HTTP 403" or took minutes. The list now comes from the `files.json` that fastlane publishes next to the frames (the same file fastlane's frameit uses), which has no such limit.
+
 ## [1.2.0] - 2026-10-07
 
 ### Added
@@ -52,6 +58,7 @@ All notable changes to appshot-studio are documented here. The format is based o
 - Two templates: `caption-top` and `caption-bottom`.
 - Rendering through headless Chrome.
 
+[1.2.1]: https://github.com/jems19s/appshot-studio/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/jems19s/appshot-studio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/jems19s/appshot-studio/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jems19s/appshot-studio/releases/tag/v1.0.0
