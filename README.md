@@ -62,6 +62,24 @@ npx skills add jems19s/appshot-studio
 
 Add `-g` to install it for all your projects. Then ask your agent for App Store screenshots. The skill lives in [`skills/appshot/`](skills/appshot/SKILL.md) if you'd rather copy it by hand (for Claude Code: `~/.claude/skills/appshot/`).
 
+### With fastlane
+
+[fastlane-plugin-appshot](https://github.com/jems19s/fastlane-plugin-appshot) adds an `appshot` action: it takes fastlane snapshot's captures into your studio for every locale, renders, and copies the framed screenshots into the folder `deliver` uploads from.
+
+```bash
+fastlane add_plugin appshot
+```
+
+```ruby
+lane :screenshots do
+  capture_screenshots(output_directory: "fastlane/raw_screenshots")
+  appshot(raw_screenshots: "fastlane/raw_screenshots")
+  upload_to_app_store(skip_binary_upload: true, skip_metadata: true)
+end
+```
+
+Set up the studio once with `appshot init` first; the plugin's README explains how captures are matched to slots.
+
 ### From a clone
 
 Try the bundled demo:
