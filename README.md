@@ -1,5 +1,8 @@
 # appshot-studio
 
+[![Swift versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fjems19s%2Fappshot-studio%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/jems19s/appshot-studio)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fjems19s%2Fappshot-studio%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/jems19s/appshot-studio)
+
 Interactive, config-driven App Store screenshot tool, written in Swift. It frames your real app screenshots inside real device bezels, puts a localized marketing caption on top of a generated background, and writes store-ready PNGs — one per locale per slot. Layouts are plain HTML/CSS rasterized by headless Chrome, so anything CSS can do, your screenshots can do.
 
 ![Two demo screenshots rendered by appshot-studio](docs/hero.png)
