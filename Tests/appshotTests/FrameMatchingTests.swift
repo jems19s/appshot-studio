@@ -196,3 +196,60 @@ import Testing
             == ["device.json", "frame-silver.png", "hole-mask.png"])
     }
 }
+
+@Suite struct DevicePackAddTests {
+    let studio: TemporaryDirectory
+    let devicesDir: String
+    let starWhiteFrame: String
+    let nightSkyFrame: String
+
+    init() throws {
+        studio = try TemporaryDirectory()
+        devicesDir = join(studio.path, "devices")
+        starWhiteFrame = join(studio.path, "iPhone Duo - Star White - Inner Open Landscape.png")
+        nightSkyFrame = join(studio.path, "iPhone Duo - Night Sky - Inner Open Landscape.png")
+        _ = try DevicePackFetchTests.frameWithScreenHole(scratchPath: starWhiteFrame)
+        _ = try DevicePackFetchTests.frameWithScreenHole(scratchPath: nightSkyFrame)
+    }
+
+    @Test func buildsAPackFromLocalFrames() throws {
+        let deviceID = try DevicePackBuilder.add(packID: "iPhone Duo",
+                                                 frameFiles: [("Star White", starWhiteFrame),
+                                                              ("night-sky", nightSkyFrame)],
+                                                 devicesDir: devicesDir, log: { _ in })
+        #expect(deviceID == "iphone-duo")
+        let spec = try loadJSON(DeviceSpec.self, at: join(devicesDir, deviceID, "device.json"), what: "device pack")
+        #expect(spec.screen == [4, 4, 12, 32])
+        #expect(spec.colors == ["star-white": "frame-star-white.png", "night-sky": "frame-night-sky.png"])
+        #expect(spec.default == "star-white")
+    }
+
+    @Test func namesAMissingFrame() {
+        let missingFrame = join(studio.path, "missing.png")
+        #expect(thrownMessage {
+            try DevicePackBuilder.add(packID: "iphone-duo", frameFiles: [("star-white", missingFrame)],
+                                      devicesDir: devicesDir, log: { _ in })
+        } == "no frame image at \(missingFrame)")
+        #expect(!FileManager.default.fileExists(atPath: devicesDir))
+    }
+
+    @Test func rejectsTheSameColorTwice() {
+        #expect(thrownMessage {
+            try DevicePackBuilder.add(packID: "iphone-duo",
+                                      frameFiles: [("Star White", starWhiteFrame), ("star-white", nightSkyFrame)],
+                                      devicesDir: devicesDir, log: { _ in })
+        } == "color star-white given more than once")
+    }
+
+    @Test func rejectsFramesOfDifferentSizes() throws {
+        let otherSizeFrame = join(studio.path, "other.png")
+        try RGBAImage(width: 10, height: 10, rgbaBytes: [UInt8](repeating: 255, count: 400))
+            .encodeRGBA(path: otherSizeFrame)
+        #expect(thrownMessage {
+            try DevicePackBuilder.add(packID: "iphone-duo",
+                                      frameFiles: [("star-white", starWhiteFrame), ("night-sky", otherSizeFrame)],
+                                      devicesDir: devicesDir, log: { _ in })
+        } == "'\(otherSizeFrame)' is 10×10, expected [20, 40]")
+        #expect(!FileManager.default.fileExists(atPath: devicesDir))
+    }
+}

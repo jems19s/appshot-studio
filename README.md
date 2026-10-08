@@ -98,7 +98,7 @@ To build the command from source instead of Homebrew: `swift build -c release &&
 | --- | --- |
 | `appshot init` | interactive wizard, or `--name` with options to skip it — scaffolds `apps/<name>/` (config, captions, assets) |
 | `appshot render` | renders `apps/<app>/` → `output/<app>/<locale>/<slot>.png`; `--app` (optional when `apps/` holds one app), repeatable `--locale`/`--slot`, `--chrome`, `--root` |
-| `appshot devices` | installed packs; `devices list` = every frame upstream; `devices fetch "<name>"` downloads + measures a pack (`--colors`, `--id`) |
+| `appshot devices` | installed packs; `devices list` = every frame upstream; `devices fetch "<name>"` downloads + measures a pack (`--colors`, `--id`); `devices add <id> <color>=<frame.png>…` measures frames you downloaded yourself |
 
 All commands take `--root` (defaults to the current directory) — the folder holding `apps/`, `templates/`, `devices/`, `output/`.
 
@@ -200,6 +200,13 @@ swift run appshot devices fetch "iPad Pro (11-inch)" --colors silver
 
 Frames are downloaded from [fastlane/frameit-frames](https://github.com/fastlane/frameit-frames) — Apple's official marketing product images. The screen cutout is measured automatically (the alpha channel is flood-filled from the canvas corners; the transparent region not reachable from outside is the screen hole) and written to `device.json`, together with `hole-mask.png` — the exact hole silhouette used to clip your screenshot to the bezel's rounded corners.
 
+For a device fastlane's collection doesn't have, such as the iPhone Duo, download the frame images yourself and let appshot measure them — one `<color>=<file>` per color, the first becomes the default:
+
+```bash
+appshot devices add iphone-duo "star-white=iPhone Duo - Star White - Inner Open Landscape.png" \
+  "night-sky=iPhone Duo - Night Sky - Inner Open Landscape.png"
+```
+
 A device pack is just a folder, so you can also build one by hand from your own bezel art:
 
 ```
@@ -220,7 +227,21 @@ The tool replaces `{{W}} {{H}} {{FONT_FACES}} {{FONT_STACK}} {{BG_IMG}} {{FRAME}
 
 ## Store sizes
 
-Set `output` to what the store requires — e.g. 1320×2868 for the current iPhone 6.9″ portrait requirement (Apple derives the smaller sizes), 2048×2732 for 13″ iPad — and pick a device pack that matches the aspect. `init` suggests these automatically.
+Set `output` to what the store requires — e.g. 1320×2868 for the current iPhone 6.9″ portrait requirement (Apple derives the smaller sizes), 2048×2732 for 13″ iPad, 2853×2007 for the iPhone Duo's inner screen — and pick a device pack that matches the aspect. `init` defaults to the device's own screen size, which is the size the store asks for, and sizes the device to fit the canvas.
+
+## iPhone Duo
+
+fastlane's frame collection has no iPhone Duo yet, and Apple's Duo bezels come under Apple's design resources license, which doesn't allow passing them on. Download them from Apple and turn them into a pack:
+
+1. Download **iPhone Duo** from the product bezels on [Apple Design Resources](https://developer.apple.com/design/resources/) and open the DMG.
+2. Add the bezel for the screen you're capturing:
+   ```bash
+   appshot devices add iphone-duo "star-white=iPhone Duo - Star White - Inner Open Landscape.png" \
+     "night-sky=iPhone Duo - Night Sky - Inner Open Landscape.png"
+   ```
+3. Capture the app in the iPhone Duo simulator at the same size and create the app as usual: `appshot init --name myapp --device iphone-duo --screenshots ./duo-captures …`. The output defaults to the screen's size, 2853×2007.
+
+App Store Connect takes the inner screen at 2853×2007 or 2007×2853 (bezels *Inner Open Landscape* / *Portrait*) and the outer screen at 2034×1398 or 1398×2034 (*Outer Closed Landscape* / *Portrait*); give each bezel its own pack id. Keep `devices/` out of git, since the bezels are Apple's. fastlane deliver can't upload Duo screenshots yet (App Store Connect takes them through its new asset library), so upload them in App Store Connect.
 
 ## CI
 

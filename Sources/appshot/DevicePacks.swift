@@ -135,6 +135,38 @@ enum DevicePackBuilder {
         }
 
         let deviceID = packID ?? FrameSource.slug(query)
+        let frames = matches.sorted(by: { $0.key < $1.key }).map { (color: $0.key, source: $0.value) }
+        let defaultColor = matches["silver"] != nil ? "silver" : frames[0].color
+        return try install(deviceID: deviceID, frames: frames, defaultColor: defaultColor, devicesDir: devicesDir,
+                           load: { name in
+                               log("  ↓ \(name).png")
+                               return try download(name)
+                           }, log: log)
+    }
+
+    static func add(packID: String, frameFiles: [(color: String, path: String)], devicesDir: String,
+                    log: (String) -> Void) throws -> String {
+        let deviceID = FrameSource.slug(packID)
+        guard !deviceID.isEmpty else { throw AppshotError("the device id needs at least one letter or digit") }
+        guard !frameFiles.isEmpty else { throw AppshotError("give at least one <color>=<frame.png>") }
+        let frames = frameFiles.map { (color: FrameSource.slug($0.color), source: $0.path) }
+        let repeatedColors = Dictionary(grouping: frames.map(\.color), by: { $0 }).filter { $0.value.count > 1 }.keys
+        guard repeatedColors.isEmpty else {
+            throw AppshotError("color \(repeatedColors.sorted().joined(separator: ", ")) given more than once")
+        }
+        for frame in frames where !FileManager.default.fileExists(atPath: frame.source) {
+            throw AppshotError("no frame image at \(frame.source)")
+        }
+        return try install(deviceID: deviceID, frames: frames, defaultColor: frames[0].color, devicesDir: devicesDir,
+                           load: { path in
+                               log("  + \(path)")
+                               return try Data(contentsOf: URL(fileURLWithPath: path))
+                           }, log: log)
+    }
+
+    private static func install(deviceID: String, frames: [(color: String, source: String)], defaultColor: String,
+                                devicesDir: String, load: (String) throws -> Data,
+                                log: (String) -> Void) throws -> String {
         let fm = FileManager.default
         // Staged on the studio's volume, so the finished pack moves into devices/ in one
         // rename and a failed fetch leaves nothing there.
@@ -148,9 +180,8 @@ enum DevicePackBuilder {
         var frameSize: [Int]?
         var screenRect: [Int]?
         var colorFiles: [String: String] = [:]
-        for (color, name) in matches.sorted(by: { $0.key < $1.key }) {
-            log("  ↓ \(name).png")
-            let bytes = try download(name)
+        for (color, source) in frames {
+            let bytes = try load(source)
             let framePath = join(packDir, "frame-\(color).png")
             try bytes.write(to: URL(fileURLWithPath: framePath))
             let frame = try RGBAImage.decode(path: framePath)
@@ -161,12 +192,11 @@ enum DevicePackBuilder {
                 screenRect = rect
                 try mask.encodeRGBA(path: join(packDir, "hole-mask.png"))
             } else if frameSize != [frame.width, frame.height] {
-                throw AppshotError("'\(name)' is \(frame.width)×\(frame.height), expected \(frameSize!)")
+                throw AppshotError("'\(source)' is \(frame.width)×\(frame.height), expected \(frameSize!)")
             }
             colorFiles[color] = "frame-\(color).png"
         }
 
-        let defaultColor = colorFiles["silver"] != nil ? "silver" : colorFiles.keys.sorted()[0]
         let spec = DeviceSpec(frameSize: frameSize!, screen: screenRect!, mask: "hole-mask.png",
                               colors: colorFiles, default: defaultColor)
         try writeJSON(spec, to: join(packDir, "device.json"))

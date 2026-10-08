@@ -20,7 +20,7 @@ struct InitCommand: ParsableCommand {
     @Option(help: "device color, e.g. \"deep-blue\" or \"Deep Blue\" (default: the device pack's default)")
     var color: String?
 
-    @Option(help: "output size WIDTHxHEIGHT (default: the App Store size for the device)")
+    @Option(help: "output size WIDTHxHEIGHT (default: the device's screen size)")
     var size: String?
 
     @Option(help: "folder with your screenshots (PNG)")
@@ -34,6 +34,12 @@ struct InitCommand: ParsableCommand {
 
     @Flag(help: "replace an existing apps/<name>/config.json")
     var overwrite = false
+
+    private enum Metrics {
+        static let captionSpace = 440
+        static let deviceWidthShare = 1120.0 / 1320
+        static let bottomMarginShare = 0.045
+    }
 
     private static let defaultMeshColors = [
         "#e8ecf4", "#dfe7f7", "#f3f0ea",
@@ -144,7 +150,9 @@ struct InitCommand: ParsableCommand {
                 }
 
             case .size:
-                if let (width, height) = pickOutputSize(deviceID: draft.deviceID!,
+                let spec = try loadJSON(DeviceSpec.self, at: join(devicesDir, draft.deviceID!, "device.json"),
+                                        what: "device pack")
+                if let (width, height) = pickOutputSize(screenSize: (spec.screen[2], spec.screen[3]),
                                                         current: draft.width > 0 ? (draft.width, draft.height) : nil) {
                     draft.width = width; draft.height = height
                     step = .screenshots; backing = false
@@ -256,14 +264,7 @@ struct InitCommand: ParsableCommand {
                 + spec.colors.keys.sorted().joined(separator: ", "))
         }
 
-        let outputSize: (width: Int, height: Int)
-        if let size {
-            outputSize = try parsedOutputSize(size)
-        } else if let storeSize = appStoreSize(deviceID: deviceID) {
-            outputSize = (storeSize.width, storeSize.height)
-        } else {
-            throw AppshotError("no App Store size known for devices/\(deviceID) — pass --size WIDTHxHEIGHT")
-        }
+        let outputSize = try size.map(parsedOutputSize) ?? (width: spec.screen[2], height: spec.screen[3])
 
         let folder = screenshotFolderPath(screenshots!)
         let files = pngFiles(in: folder)
@@ -323,13 +324,16 @@ struct InitCommand: ParsableCommand {
 
     private func write(draft: Draft, root: String) throws {
         let appDir = join(root, "apps", draft.name)
+        let spec = try loadJSON(DeviceSpec.self, at: join(root, "devices", draft.deviceID!, "device.json"),
+                                what: "device pack")
         let config = AppConfig(
             app: draft.name,
             device: draft.deviceID!,
             deviceColor: draft.deviceColor,
             output: .init(width: draft.width, height: draft.height),
-            layout: .init(deviceWidth: Int((Double(draft.width) * 1120 / 1320).rounded()),
-                          deviceTop: Int((Double(draft.height) * 440 / 2868).rounded())),
+            layout: .init(deviceWidth: deviceWidthFittingCanvas(width: draft.width, height: draft.height,
+                                                                frameSize: spec.frameSize),
+                          deviceTop: Metrics.captionSpace),
             fonts: nil,
             locales: draft.locales,
             theme: ["accent": draft.accent, "headlineColor": draft.headline],
@@ -395,45 +399,33 @@ struct InitCommand: ParsableCommand {
         }
     }
 
-    private func pickOutputSize(deviceID: String, current: (Int, Int)?) -> (Int, Int)? {
-        var options: [(label: String, size: (Int, Int)?)] = []
-        if let storeSize = appStoreSize(deviceID: deviceID) {
-            options.append(("\(storeSize.width) × \(storeSize.height) — App Store \(storeSize.display)",
-                            (storeSize.width, storeSize.height)))
-        }
-        options.append(("Custom…", nil))
+    /// The device takes the width an iPhone set uses, unless that would push it past the bottom of the
+    /// canvas, as on landscape screens: then it shrinks to fit between the caption and the bottom margin.
+    private func deviceWidthFittingCanvas(width: Int, height: Int, frameSize: [Int]) -> Int {
+        let frameHeightPerWidth = Double(frameSize[1]) / Double(frameSize[0])
+        let widthByCanvas = Double(width) * Metrics.deviceWidthShare
+        let heightBelowCaption = Double(height - Metrics.captionSpace) - Double(height) * Metrics.bottomMarginShare
+        return Int(min(widthByCanvas, heightBelowCaption / frameHeightPerWidth).rounded())
+    }
+
+    private func pickOutputSize(screenSize: (width: Int, height: Int), current: (Int, Int)?) -> (Int, Int)? {
+        let options: [(label: String, size: (Int, Int)?)] = [
+            ("\(screenSize.width) × \(screenSize.height) — the device's screen size", screenSize),
+            ("Custom…", nil),
+        ]
         while true {
             let initial = current.flatMap { size in
                 options.firstIndex { $0.size ?? (0, 0) == size }
             } ?? 0
-            let onlyCustom = options.count == 1
-            let choice: Int
-            if onlyCustom {
-                choice = 0
-            } else {
-                guard let picked = Prompt.select("Output size", options: options.map(\.label),
-                                                 initial: initial, canGoBack: true) else { return nil }
-                choice = picked
-            }
+            guard let choice = Prompt.select("Output size", options: options.map(\.label),
+                                             initial: initial, canGoBack: true) else { return nil }
             if let size = options[choice].size { return size }
-            guard let width = pickNumber("Width (px)", defaultValue: current?.0 ?? 1320,
-                                         rule: .pixelSize) else {
-                if onlyCustom { return nil }
-                continue
-            }
-            guard let height = pickNumber("Height (px)", defaultValue: current?.1 ?? 2868,
-                                          rule: .pixelSize) else {
-                if onlyCustom { return nil }
-                continue
-            }
+            guard let width = pickNumber("Width (px)", defaultValue: current?.0 ?? screenSize.width,
+                                         rule: .pixelSize) else { continue }
+            guard let height = pickNumber("Height (px)", defaultValue: current?.1 ?? screenSize.height,
+                                          rule: .pixelSize) else { continue }
             return (width, height)
         }
-    }
-
-    private func appStoreSize(deviceID: String) -> (display: String, width: Int, height: Int)? {
-        if deviceID.contains("ipad") { return ("iPad 13″", 2048, 2732) }
-        if deviceID.contains("iphone") { return ("iPhone 6.9″", 1320, 2868) }
-        return nil
     }
 
     private func pickScreenshotFolder(defaultFolder: String?) -> (String, [String])? {

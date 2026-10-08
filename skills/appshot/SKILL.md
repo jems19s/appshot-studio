@@ -25,7 +25,8 @@ The user's instructions always win over the defaults below.
 appshot --version
 ```
 
-- Needs **1.2.0 or later** (that's when `init` gained the options used below). Older: `brew upgrade appshot`.
+- Needs **1.2.0 or later** (that's when `init` gained the options used below), **1.4.0** for the iPhone Duo.
+  Older: `brew upgrade appshot`.
 - Missing: ask the user before installing anything, then `brew install jems19s/tap/appshot`.
 - Renders through headless Google Chrome or Chromium, found automatically; otherwise pass `--chrome PATH` or set
   `$CHROME`. macOS 13 or later.
@@ -46,7 +47,7 @@ appshot frames screenshots; it doesn't capture them. Use what the user gives you
 (`fastlane/screenshots/<locale>/`) or simulator captures (`xcrun simctl io booted screenshot home.png`).
 
 - Capture at the size of the device you frame: 1320×2868 for the 6.9″ iPhone (iPhone 16/17 Pro Max simulator),
-  2048×2732 for the 13″ iPad.
+  2048×2732 for the 13″ iPad, 2853×2007 for the iPhone Duo's inner screen in landscape.
 - Screenshots are taken in file name order, and each becomes a slot named `01-<file name>`, `02-…`. Plain names
   (`home.png`, `search.png`) read best; a numeric prefix is kept, giving `01-01-home`.
 - `--screenshots` takes one folder. fastlane snapshot names files like `iPhone 17 Pro Max-01_map.png`, one folder
@@ -71,16 +72,33 @@ appshot init --name myapp --device "iPhone 17 Pro Max" --screenshots ./raw \
 ```
 
 - `--device` takes the frame name fastlane uses and downloads it if needed. `appshot devices list` prints every
-  name. Names match whole words: "iPhone 17" is not the 17 Pro.
+  name. Names match whole words: "iPhone 17" is not the 17 Pro. It also takes the id of an installed pack, such as
+  one made with `appshot devices add` (the iPhone Duo, below).
 - `--caption`: one per screenshot, in file name order; the rest start empty. Every locale starts with the same
   text, so translate afterwards (step 5).
 - `--color`: the color part of the frame name, lowercase with hyphens: "Apple iPhone 17 Pro Max Deep Blue" →
   `--color deep-blue`. Without it you get the pack's default (silver where there is one). A wrong color fails
   after the download and lists the colors the pack has.
-- Optional: `--size WIDTHxHEIGHT` (defaults: 1320×2868 for iPhone, 2048×2732 for iPad; required for other
-  devices), `--overwrite`.
+- Optional: `--size WIDTHxHEIGHT` (default: the device's screen size, which is the size App Store Connect asks
+  for), `--overwrite`.
 - Each slot's caption key is its screenshot's file name without `.png`, lowercase with hyphens: `map.png` →
   `map`. `config.json` lists them under `slots`.
+
+### iPhone Duo
+
+fastlane's frame collection has no iPhone Duo, and Apple's Duo bezels can't be passed on (Apple's design resources
+license), so they come from Apple, downloaded by the user:
+
+1. Ask the user to download **iPhone Duo** from the product bezels on https://developer.apple.com/design/resources/
+   and open the DMG. Don't download it yourself or accept Apple's license on their behalf.
+2. Make a pack from the bezel matching the captures, one `<color>=<file>` per color:
+   `appshot devices add iphone-duo "star-white=<…>/iPhone Duo - Star White - Inner Open Landscape.png"`.
+   Sizes App Store Connect takes: inner screen 2853×2007 or 2007×2853 (*Inner Open Landscape* / *Portrait*),
+   outer screen 2034×1398 or 1398×2034 (*Outer Closed Landscape* / *Portrait*); one pack id per bezel.
+3. `appshot init --name <app> --device iphone-duo --screenshots <duo captures> …` as above; the size and the
+   device's fit follow from the pack.
+4. Keep `devices/` out of git. fastlane deliver can't upload Duo screenshots yet; the user uploads them in App Store
+   Connect.
 
 ## 5. Write the captions
 

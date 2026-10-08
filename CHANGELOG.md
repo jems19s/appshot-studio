@@ -2,6 +2,17 @@
 
 All notable changes to appshot-studio are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-10-08
+
+### Added
+
+- `appshot devices add <id> <color>=<frame.png>…` makes a device pack from frame images you downloaded yourself and measures the screen cutout, as `fetch` does. This is how to use the iPhone Duo, whose bezels Apple publishes but fastlane's frame collection doesn't have yet; the README has the steps.
+
+### Changed
+
+- `init` defaults the output size to the device's own screen size, which is the size App Store Connect asks for: 2853×2007 for the iPhone Duo's inner screen, 1668×2388 for the 11-inch iPad Pro (which previously got the 13-inch 2048×2732), and the same 1320×2868 as before for the 6.9-inch iPhone. Devices without a known size no longer need `--size`.
+- `init` sizes the device to fit the canvas: on landscape screens such as the Duo's it used to run off the bottom. iPhone layouts are unchanged.
+
 ## [1.3.0] - 2026-10-07
 
 ### Added
@@ -79,6 +90,7 @@ All notable changes to appshot-studio are documented here. The format is based o
 - Two templates: `caption-top` and `caption-bottom`.
 - Rendering through headless Chrome.
 
+[1.4.0]: https://github.com/jems19s/appshot-studio/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jems19s/appshot-studio/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/jems19s/appshot-studio/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/jems19s/appshot-studio/compare/v1.2.0...v1.2.1

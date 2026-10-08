@@ -66,6 +66,34 @@ import Testing
         try runInit(["--overwrite"])
     }
 
+    @Test func defaultsToTheDeviceScreenAndFitsALandscapeDevice() throws {
+        let packDir = join(studio.path, "devices", "iphone-duo")
+        try FileManager.default.ensureDirectory(packDir)
+        let spec = DeviceSpec(frameSize: [3093, 2247], screen: [120, 120, 2853, 2007], mask: "hole-mask.png",
+                              colors: ["star-white": "frame-star-white.png"], default: "star-white")
+        try writeJSON(spec, to: join(packDir, "device.json"))
+
+        var command = try InitCommand.parse(["--root", studio.path, "--name", "Duo", "--device", "iphone-duo",
+                                             "--screenshots", screenshotsDir])
+        try command.run()
+
+        let config = try loadJSON(AppConfig.self, at: join(studio.path, "apps", "duo", "config.json"), what: "config")
+        #expect(config.output.width == 2853 && config.output.height == 2007)
+        let deviceWidth = try #require(config.layout?.deviceWidth)
+        let deviceTop = try #require(config.layout?.deviceTop)
+        let deviceBottom = deviceTop + deviceWidth * 2247 / 3093
+        #expect(deviceBottom < 2007)
+        #expect(deviceWidth < 2853)
+    }
+
+    @Test func keepsTheIPhoneLayout() throws {
+        try runInit([])
+        let config = try loadJSON(AppConfig.self, at: join(studio.path, "apps", "plants", "config.json"),
+                                  what: "config")
+        #expect(config.layout?.deviceWidth == 1120)
+        #expect(config.layout?.deviceTop == 440)
+    }
+
     @Test func acceptsColorNamesAsFrameitPrintsThem() throws {
         try runInit(["--color", "Deep Blue"])
         let config = try loadJSON(AppConfig.self, at: join(studio.path, "apps", "plants", "config.json"),

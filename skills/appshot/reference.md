@@ -64,6 +64,7 @@ A new layout is a new `templates/<name>.html` referenced from a slot. Templates 
 appshot devices                                   # installed packs and their colors
 appshot devices list                              # every frame available
 appshot devices fetch "iPad Pro (11-inch)" --colors silver
+appshot devices add iphone-duo "star-white=Star White Inner Landscape.png"   # frames you downloaded
 ```
 
 Frames come from fastlane/frameit-frames (Apple's marketing images); the screen cutout is measured automatically.
