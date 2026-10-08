@@ -4,6 +4,9 @@ import PackageDescription
 let package = Package(
     name: "appshot-studio",
     platforms: [.macOS(.v13)],
+    products: [
+        .executable(name: "appshot", targets: ["appshot"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
     ],

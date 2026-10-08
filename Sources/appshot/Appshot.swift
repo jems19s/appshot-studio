@@ -8,7 +8,7 @@ struct Appshot: ParsableCommand {
         abstract: "Config-driven App Store screenshot renderer.",
         discussion: "Frames real app screenshots inside device bezels with localized captions "
             + "over generated backgrounds — HTML/CSS layouts rasterized by headless Chrome.",
-        version: "1.4.0",
+        version: "1.4.1",
         subcommands: [InitCommand.self, RenderCommand.self, DevicesCommand.self])
 
     /// Line-buffered even when piped, so CI logs and coding agents see progress as it happens and in order with errors.

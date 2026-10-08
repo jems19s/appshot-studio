@@ -2,6 +2,12 @@
 
 All notable changes to appshot-studio are documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-10-08
+
+### Fixed
+
+- `Package.swift` now declares the `appshot` executable product. Swift built the command anyway, but tools that read the manifest — the Swift Package Index, and installers such as Mint — saw a package with no products.
+
 ## [1.4.0] - 2026-10-08
 
 ### Added
@@ -90,6 +96,7 @@ All notable changes to appshot-studio are documented here. The format is based o
 - Two templates: `caption-top` and `caption-bottom`.
 - Rendering through headless Chrome.
 
+[1.4.1]: https://github.com/jems19s/appshot-studio/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/jems19s/appshot-studio/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/jems19s/appshot-studio/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/jems19s/appshot-studio/compare/v1.2.1...v1.2.2
