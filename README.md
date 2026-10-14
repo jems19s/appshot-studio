@@ -9,6 +9,8 @@ Interactive, config-driven App Store screenshot tool, written in Swift. It frame
 
 *Both images above are straight `appshot render` output for the bundled demo app — the two shipped templates (`caption-top`, and `caption-bottom` with a subtitle), English and German, flat and tilted.*
 
+**Used in production:** [Oysia — Curated City Guide](https://apps.apple.com/us/app/oysia-curated-city-guide/id6746510775), the author's own app, ships its App Store screenshots from appshot-studio: 6 slots in 18 languages, plus the same set again for iPhone Duo, all from one config.
+
 ## Why not frameit / a design tool / a SaaS?
 
 - **fastlane frameit** composites flat images with rigid typography — no tilt, no gradients, no layout freedom.
